@@ -51,7 +51,7 @@ exports.createOne = (model) =>
     res.status(201).json({
       status: 'success',
       data: {
-        user: doc,
+        doc,
       },
     });
   });

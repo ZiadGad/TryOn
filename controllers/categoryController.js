@@ -17,7 +17,10 @@ exports.getAllTopLevelCategories = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllCategories = catchAsync(async (req, res, next) => {
-  const categories = await Category.find({ isTopLevel: false });
+  const categories = await Category.find({ isTopLevel: false }).populate({
+    path: 'parent',
+    select: 'name',
+  });
 
   res.status(200).json({
     status: 'success',

@@ -16,7 +16,8 @@ const productSchema = new mongoose.Schema(
     },
     imgCover: {
       type: String,
-      required: [true, 'Product must have an image cover'],
+      // required: [true, 'Product must have an image cover'],
+      default: 'default.jpeg',
     },
     images: [String],
     price: {
@@ -68,27 +69,8 @@ const productSchema = new mongoose.Schema(
       enum: ['show', 'hide'],
       default: 'show',
     },
-    quantity: {
-      type: Number,
-      min: 0,
-      default: 0,
-
-      required: true,
-    },
-    inStock: {
-      type: Boolean,
-      default: true,
-    },
-    colors: {
-      type: [String],
-      required: [true, 'Product must have atleast one color'],
-    },
-    sizes: {
-      type: [String],
-      enum: ['S', 'M', 'L', 'XL', 'XXL'],
-      required: [true, 'Product must have atleast one size'],
-    },
   },
+
   {
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
@@ -97,23 +79,27 @@ const productSchema = new mongoose.Schema(
 );
 productSchema.index({ category: 1, price: 1 });
 productSchema.index({ price: 1 });
+productSchema.index({ productDiscount: -1, createdAt: -1 });
 productSchema.index({ createdAt: -1 });
 
 productSchema.pre('save', function (next) {
-  if (!this.slug) {
-    this.slug = slugify(this.name, { lower: true });
-  } else {
-    this.slug = slugify(this.slug, { lower: true });
+  if (this.isNew || this.isModified('name')) {
+    if (!this.slug) {
+      this.slug = slugify(this.name, { lower: true });
+    } else {
+      this.slug = slugify(this.slug, { lower: true });
+    }
   }
   next();
 });
 
-productSchema.pre('save', function () {
-  if (this.isModified('quantity')) this.inStock = this.quantity > 0;
-});
-
 productSchema.virtual('reviews', {
   ref: 'Review',
+  foreignField: 'product',
+  localField: '_id',
+});
+productSchema.virtual('variations', {
+  ref: 'Variation',
   foreignField: 'product',
   localField: '_id',
 });

@@ -9,17 +9,23 @@ const cookieParser = require('cookie-parser');
 const hpp = require('hpp');
 const cors = require('cors');
 const compression = require('compression');
+// const { connectRedis } = require('./utils/redisClient');
 
 const productRouter = require('./routes/productRoutes');
 const categoryRouter = require('./routes/categoryRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 const favoriteRouter = require('./routes/favoriteRoutes');
+const emailQueue = require('./queues/emailQueue');
+const emailProcessor = require('./queues/processors/emailProcessor');
+const imageQueue = require('./queues/imageQueue');
+const imageProcessor = require('./queues/processors/imageProcessor');
 
 const AppError = require('./utils/AppError');
 const globalErrorHandler = require('./controllers/errorController');
 
 const app = express();
+// connectRedis().catch(console.error);
 
 app.use(cors());
 app.options('*', cors());
@@ -53,8 +59,10 @@ if (process.env.NODE_ENV === 'development') {
 
 // Body Parser Middlewares
 app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '20kb' }));
 app.use(cookieParser());
+emailQueue.process(emailProcessor);
+imageQueue.process(imageProcessor);
 
 app.use('/api/v1/products', productRouter);
 app.use('/api/v1/categories', categoryRouter);

@@ -16,6 +16,7 @@ router
     authController.protect,
     authController.restrictTO('admin'),
     productController.setCategoryId,
+    productController.uploadProductImages,
     productController.createProduct,
   );
 router
@@ -24,6 +25,8 @@ router
   .patch(
     authController.protect,
     authController.restrictTO('admin'),
+    productController.uploadProductImages,
+    // productController.resizeProductImages,
     productController.updateProduct,
   )
   .delete(

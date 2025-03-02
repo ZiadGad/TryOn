@@ -6,7 +6,7 @@ const categorySchema = new mongoose.Schema(
       type: String,
       trim: true,
       required: [true, 'Category must have a name'],
-      unique: true,
+      // unique: true,
       lowercase: true,
     },
     parent: {
@@ -17,9 +17,12 @@ const categorySchema = new mongoose.Schema(
     description: {
       type: String,
       trim: true,
+      minlength: 10,
+      maxlength: 100,
     },
     image: {
       type: String,
+      default: '/default-category.png',
     },
 
     isTopLevel: {
@@ -30,8 +33,8 @@ const categorySchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['active', 'inactive'],
-      default: 'active',
+      enum: ['show', 'hide'],
+      default: 'show',
     },
   },
   {
@@ -39,9 +42,8 @@ const categorySchema = new mongoose.Schema(
     toObject: { virtuals: true },
   },
 );
-categorySchema.index({ parent: 1 });
-categorySchema.index({ isTopLevel: 1 });
 categorySchema.index({ isTopLevel: 1, name: 1 });
+categorySchema.index({ parent: 1, name: 1 }, { unique: true });
 
 categorySchema.virtual('children', {
   ref: 'Category',
