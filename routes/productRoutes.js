@@ -2,6 +2,7 @@ const express = require('express');
 const productController = require('../controllers/productController');
 const authController = require('../controllers/authController');
 const reviewRouter = require('./reviewRoutes');
+const productValidator = require('../utils/validators/productValidator');
 
 const router = express.Router({ mergeParams: true });
 router.use('/:productId/reviews', reviewRouter);
@@ -16,22 +17,29 @@ router
     authController.protect,
     authController.restrictTO('admin'),
     productController.setCategoryId,
+    productValidator.createProductValidator,
     productController.uploadProductImages,
     productController.createProduct,
   );
 router
   .route('/:id')
-  .get(authController.isLoggedIn, productController.getProduct)
+  .get(
+    authController.isLoggedIn,
+    productValidator.getProductValidator,
+    productController.getProduct,
+  )
   .patch(
     authController.protect,
     authController.restrictTO('admin'),
     productController.uploadProductImages,
     // productController.resizeProductImages,
+    productValidator.updateProductValidator,
     productController.updateProduct,
   )
   .delete(
     authController.protect,
     authController.restrictTO('admin'),
+    productValidator.deleteProductValidator,
     productController.deleteProduct,
   );
 

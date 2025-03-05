@@ -9,13 +9,14 @@ const cookieParser = require('cookie-parser');
 const hpp = require('hpp');
 const cors = require('cors');
 const compression = require('compression');
-// const { connectRedis } = require('./utils/redisClient');
 
 const productRouter = require('./routes/productRoutes');
 const categoryRouter = require('./routes/categoryRoutes');
+const subCategoryRouter = require('./routes/subCategoryRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 const favoriteRouter = require('./routes/favoriteRoutes');
+
 const emailQueue = require('./queues/emailQueue');
 const emailProcessor = require('./queues/processors/emailProcessor');
 const imageQueue = require('./queues/imageQueue');
@@ -25,7 +26,6 @@ const AppError = require('./utils/AppError');
 const globalErrorHandler = require('./controllers/errorController');
 
 const app = express();
-// connectRedis().catch(console.error);
 
 app.use(cors());
 app.options('*', cors());
@@ -64,8 +64,9 @@ app.use(cookieParser());
 emailQueue.process(emailProcessor);
 imageQueue.process(imageProcessor);
 
-app.use('/api/v1/products', productRouter);
 app.use('/api/v1/categories', categoryRouter);
+app.use('/api/v1/subcategories', subCategoryRouter);
+app.use('/api/v1/products', productRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
 app.use('/api/v1/favorites', favoriteRouter);

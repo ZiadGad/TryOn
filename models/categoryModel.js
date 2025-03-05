@@ -1,19 +1,18 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 
 const categorySchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      trim: true,
       required: [true, 'Category must have a name'],
-      // unique: true,
+      unique: true,
+      trim: true,
       lowercase: true,
+      minlength: [3, 'Too short category name'],
+      maxlength: [32, 'Too long category name'],
     },
-    parent: {
-      type: mongoose.Schema.ObjectId,
-      ref: 'Category',
-      default: null,
-    },
+    slug: String,
     description: {
       type: String,
       trim: true,
@@ -24,26 +23,21 @@ const categorySchema = new mongoose.Schema(
       type: String,
       default: '/default-category.png',
     },
-
-    isTopLevel: {
-      type: Boolean,
-      default: function () {
-        return this.parent === null;
-      },
-    },
     status: {
       type: String,
       enum: ['show', 'hide'],
       default: 'show',
     },
   },
+  { timestamps: true },
   {
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   },
 );
-categorySchema.index({ isTopLevel: 1, name: 1 });
-categorySchema.index({ parent: 1, name: 1 }, { unique: true });
+categorySchema.index({ name: 1 });
+
+// FIXME: Change ref to subcategory
 
 categorySchema.virtual('children', {
   ref: 'Category',
@@ -55,6 +49,18 @@ categorySchema.virtual('products', {
   ref: 'Product',
   foreignField: 'category',
   localField: '_id',
+});
+
+// Query middleware
+
+// Document middleware
+categorySchema.pre('save', function (next) {
+  if (!this.slug) {
+    this.slug = slugify(this.name, { lower: true });
+    next();
+  }
+  this.slug = slugify(this.slug, { lower: true });
+  next();
 });
 
 const Category = mongoose.model('Category', categorySchema);

@@ -7,7 +7,6 @@ const factory = require('./handleFactory');
 const ApiFeatures = require('../utils/apiFeatures');
 const AppError = require('../utils/AppError');
 const catchAsync = require('../utils/catchAsync');
-const client = require('../utils/redisClient');
 
 const { uploadImageJob } = require('../queues/jobs/ImageJobs');
 
@@ -85,22 +84,10 @@ exports.getOnSaleProducts = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllProducts = catchAsync(async (req, res, next) => {
-  const filter = factory.hiddenProductFilter(req);
+  const filter = factory.handleHiddenStatus(req);
 
   if (req.params.categoryId) filter.category = req.params.categoryId;
 
-  const cachProducts = await client.get('products');
-  if (cachProducts != null) {
-    console.log('cach hit');
-    return res.status(200).json({
-      status: 'success',
-      results: JSON.parse(cachProducts).length,
-      data: {
-        products: JSON.parse(cachProducts),
-      },
-    });
-  }
-  console.log('cach miss');
   const features = new ApiFeatures(Product.find(filter), req.query)
     .filter()
     .sort({ createdAt: -1 })
@@ -108,7 +95,6 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
     .paginate();
 
   const products = await features.query;
-  client.set('products', JSON.stringify(products));
   return res.status(200).json({
     status: 'success',
     results: products.length,
@@ -119,17 +105,21 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
 });
 
 exports.getProduct = catchAsync(async (req, res, next) => {
-  // const filter = { _id: req.params.id };
-  // if (!req.user || req.user.role !== 'admin') filter.status = { $ne: 'hide' };
-  const filter = factory.hiddenProductFilter(req);
+  const filter = factory.handleHiddenStatus(req);
   filter._id = req.params.id;
 
   const product = await Product.findOne(filter)
     .populate({
       path: 'reviews',
     })
+
     .populate({
-      path: 'variations',
+      path: 'category',
+      select: 'name -_id',
+    })
+    .populate({
+      path: 'subcategories',
+      select: 'name -_id',
     });
 
   if (!product) {

@@ -2,7 +2,7 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
 const ApiFeatures = require('../utils/apiFeatures');
 
-exports.hiddenProductFilter = (req) =>
+exports.handleHiddenStatus = (req) =>
   !req.user || req.user.role !== 'admin' ? { status: { $ne: 'hide' } } : {};
 
 exports.getAll = (model, sort) =>

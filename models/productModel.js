@@ -5,21 +5,37 @@ const productSchema = new mongoose.Schema(
   {
     name: {
       type: String,
+      unique: true,
       required: [true, 'Product must have a name'],
       trim: true,
       maxlength: [40, 'A product must have less or equal than 40 characters'],
-      minlength: [10, 'A product must have more or equal than 10 characters'],
+      minlength: [5, 'A product must have more or equal than 5 characters'],
     },
     slug: {
       type: String,
       unique: true,
     },
-    imgCover: {
+    summary: {
       type: String,
-      // required: [true, 'Product must have an image cover'],
-      default: 'default.jpeg',
+      trim: true,
+      required: [true, 'A product must have a summary'],
+      minlength: 10,
+      maxlength: 200,
     },
-    images: [String],
+    description: {
+      type: String,
+      trim: true,
+      minlength: 20,
+      maxlength: 1000,
+    },
+    quantity: {
+      type: Number,
+      required: [true, 'Product Quantity is required'],
+    },
+    sold: {
+      type: Number,
+      default: 0,
+    },
     price: {
       type: Number,
       required: [true, 'Product must have a price'],
@@ -35,24 +51,24 @@ const productSchema = new mongoose.Schema(
         message: 'Discount price ({VALUE}) should be below regular price',
       },
     },
-    summary: {
+    colors: [String],
+    imgCover: {
       type: String,
-      trim: true,
-      required: [true, 'A product must have a summary'],
-      minlength: 10,
-      maxlength: 200,
+      required: [true, 'Product must have an image cover'],
+      default: 'default.jpeg',
     },
-    description: {
-      type: String,
-      trim: true,
-      minlength: 20,
-      maxlength: 1000,
-    },
+    images: [String],
     category: {
       type: mongoose.Schema.ObjectId,
       ref: 'Category',
       required: [true, 'Product must belong to a category'],
     },
+    subcategories: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'SubCategory',
+      },
+    ],
     ratingsAverage: {
       type: Number,
       default: 4.5,
@@ -98,10 +114,22 @@ productSchema.virtual('reviews', {
   foreignField: 'product',
   localField: '_id',
 });
-productSchema.virtual('variations', {
-  ref: 'Variation',
-  foreignField: 'product',
-  localField: '_id',
+
+// Variations
+
+// productSchema.virtual('variations', {
+//   ref: 'Variation',
+//   foreignField: 'product',
+//   localField: '_id',
+// });
+
+productSchema.pre('save', function (next) {
+  if (!this.slug) {
+    this.slug = slugify(this.name, { lower: true });
+    next();
+  }
+  this.slug = slugify(this.slug, { lower: true });
+  next();
 });
 
 const Product = mongoose.model('Product', productSchema);

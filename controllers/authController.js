@@ -12,8 +12,18 @@ const signToken = (id) =>
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 
-const createSentToken = (user, statusCode, res) => {
+const createSentToken = (user, statusCode, req, res) => {
   const token = signToken(user._id);
+  res.cookie('jwt', token, {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
+    ),
+    httpOnly: true, // means cookie can't be manipulated on browser or deleted
+    secure: req.secure || req.headers['x-forwarded-proto'] === 'https',
+  });
+
+  user.password = undefined;
+
   res.status(statusCode).json({
     status: 'success',
     token,
@@ -34,7 +44,7 @@ exports.signup = catchAsync(async (req, res, next) => {
   const url = `${req.protocol}://${req.get('host')}/me`; // {{Frontend}}
   addEmailJob(newUser, url, 'welcome');
 
-  createSentToken(newUser, 201, res);
+  createSentToken(newUser, 201, req, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -47,7 +57,7 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!user || !(await user.correctPassword(password, user.password)))
     return next(new AppError('Incorrect email or password', 401));
 
-  createSentToken(user, 200, res);
+  createSentToken(user, 200, req, res);
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
@@ -57,6 +67,8 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
   if (!token)
     return next(
@@ -165,7 +177,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   user.passwordResetExpires = undefined;
   await user.save();
 
-  createSentToken(user, 200, res);
+  createSentToken(user, 200, req, res);
 });
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
@@ -178,5 +190,5 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   user.passwordConfirm = req.body.passwordConfirm;
   await user.save();
 
-  createSentToken(user, 200, res);
+  createSentToken(user, 200, req, res);
 });

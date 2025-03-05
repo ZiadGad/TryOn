@@ -4,27 +4,13 @@ const AppError = require('../utils/AppError');
 const Category = require('../models/categoryModel');
 const factory = require('./handleFactory');
 
-exports.getAllTopLevelCategories = catchAsync(async (req, res, next) => {
-  const topLevelCategories = await Category.find({ isTopLevel: true });
-
-  res.status(200).json({
-    status: 'success',
-    results: topLevelCategories.length,
-    data: {
-      categories: topLevelCategories,
-    },
-  });
-});
-
 exports.getAllCategories = catchAsync(async (req, res, next) => {
-  const categories = await Category.find({ isTopLevel: false }).populate({
-    path: 'parent',
-    select: 'name',
-  });
+  const filter = factory.handleHiddenStatus(req);
+  const categories = await Category.find(filter);
 
   res.status(200).json({
     status: 'success',
-    results: categories.lenght,
+    results: categories.length,
     data: {
       categories,
     },
@@ -32,16 +18,8 @@ exports.getAllCategories = catchAsync(async (req, res, next) => {
 });
 
 exports.getCategory = catchAsync(async (req, res, next) => {
-  const category = await Category.findById(req.params.id)
-    .populate({
-      path: 'products',
-      match: factory.hiddenProductFilter(req),
-      select:
-        'name imgCover price productDiscount summary ratingsAverage ratingsQuantity inStock',
-    })
-    .populate({
-      path: 'children',
-    });
+  const filter = factory.handleHiddenStatus(req);
+  const category = await Category.findOne({ _id: req.params.id, ...filter });
   if (!category) return next(new AppError('No category with this id', 404));
 
   res.status(200).json({
@@ -64,14 +42,15 @@ exports.createCategory = catchAsync(async (req, res, next) => {
 });
 
 exports.updateCategory = catchAsync(async (req, res, next) => {
-  const freshCategory = await Category.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    {
-      new: true,
-      runValidators: true,
-    },
-  );
+  const freshCategory = await Category.findById(req.params.id);
+  if (!freshCategory)
+    return next(new AppError('No category with this id', 404));
+
+  Object.keys(req.body).forEach((key) => {
+    freshCategory[key] = req.body[key];
+  });
+
+  await freshCategory.save();
 
   res.status(200).json({
     status: 'success',
