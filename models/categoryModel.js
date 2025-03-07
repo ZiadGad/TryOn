@@ -35,6 +35,7 @@ const categorySchema = new mongoose.Schema(
     toObject: { virtuals: true },
   },
 );
+categorySchema.index({ createdAt: -1 });
 categorySchema.index({ name: 1 });
 
 // FIXME: Change ref to subcategory

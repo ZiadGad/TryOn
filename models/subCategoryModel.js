@@ -22,6 +22,8 @@ const subCategorySchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+subCategorySchema.index({ createdAt: -1 });
+
 // Document middleware
 subCategorySchema.pre('save', function (next) {
   if (!this.slug) {
