@@ -19,10 +19,10 @@ const categorySchema = new mongoose.Schema(
       minlength: 10,
       maxlength: 100,
     },
-    image: {
-      type: String,
-      default: '/default-category.png',
-    },
+    // image: {
+    //   type: String,
+    //   default: '/default-category.png',
+    // },
     status: {
       type: String,
       enum: ['show', 'hide'],

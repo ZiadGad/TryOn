@@ -16,6 +16,7 @@ exports.createProductValidator = [
     .withMessage('Too short Product name')
     .isLength({ max: 40 })
     .withMessage('Too long Product name'),
+
   check('summary')
     .notEmpty()
     .withMessage('Product must have a summary')
@@ -23,6 +24,7 @@ exports.createProductValidator = [
     .withMessage('Summary can not be less than 10 characters')
     .isLength({ max: 200 })
     .withMessage('Summary can not be more than 200 characters'),
+
   check('description')
     .notEmpty()
     .withMessage('Product must have a description')
@@ -30,13 +32,17 @@ exports.createProductValidator = [
     .withMessage('Product desciption can not be less than 20 characters')
     .isLength({ max: 1000 })
     .withMessage('Product description can not be more than 1000 characters'),
+
   check('quantity').notEmpty().withMessage('Product must have a quantity'),
+
   check('sold').optional().isNumeric().withMessage('Sold must be a number'),
+
   check('price')
     .notEmpty()
     .withMessage('Product must have a price')
     .isNumeric()
     .withMessage('Price must be a numberic'),
+
   check('productDiscount')
     .optional()
     .isNumeric()
@@ -48,15 +54,19 @@ exports.createProductValidator = [
       }
       return true;
     }),
+
   check('colors')
     .optional()
     .isArray()
     .withMessage('colors should be an array of strings'),
-  check('imgCover').notEmpty().withMessage('Product must have image cover'),
+
+  check('imgCover').optional(),
+
   check('images')
     .optional()
     .isArray()
     .withMessage('images should be an array of strings'),
+
   check('category')
     .notEmpty()
     .withMessage('Product must belong to Category')
@@ -70,7 +80,8 @@ exports.createProductValidator = [
           );
       }),
     ),
-  check('subcategory')
+
+  check('subcategories')
     .notEmpty()
     .withMessage('Product must belong to subcategory')
     .isMongoId()
@@ -83,15 +94,32 @@ exports.createProductValidator = [
           }
         },
       ),
+    )
+    .custom((val, { req }) =>
+      SubCategory.find({ category: req.body.category }).then(
+        (subcategories) => {
+          let subcategoriesIdsInDB = [];
+
+          subcategoriesIdsInDB = subcategories.map((s) => s._id.toString());
+          if (!val.every((v) => subcategoriesIdsInDB.includes(v))) {
+            return Promise.reject(
+              new Error(`Subcategories are not belong to this category id`),
+            );
+          }
+        },
+      ),
     ),
+
   check('ratingsAverage')
     .optional()
     .isNumeric()
     .withMessage('ratingsAverage must be a number'),
+
   check('ratingsQuantity')
     .optional()
     .isNumeric()
     .withMessage('ratingsQuantity must be a number'),
+
   validatorMiddleware,
 ];
 

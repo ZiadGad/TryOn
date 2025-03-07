@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
 const User = require('../models/userModel');
-const { addEmailJob } = require('../queues/jobs/emailJobs');
+// const { addEmailJob } = require('../queues/jobs/emailJobs');
 const Email = require('../utils/email');
 
 const signToken = (id) =>
@@ -41,8 +41,8 @@ exports.signup = catchAsync(async (req, res, next) => {
     passwordConfirm: req.body.passwordConfirm,
     // role: req.body.role,
   });
-  const url = `${req.protocol}://${req.get('host')}/me`; // {{Frontend}}
-  addEmailJob(newUser, url, 'welcome');
+  // const url = `${req.protocol}://${req.get('host')}/me`; // {{Frontend}}
+  // addEmailJob(newUser, url, 'welcome');
 
   createSentToken(newUser, 201, req, res);
 });
@@ -136,7 +136,8 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
 
   try {
-    addEmailJob(user, resetURL, 'passwordReset');
+    // addEmailJob(user, resetURL, 'passwordReset');
+    await new Email(user, resetURL).sendPasswordReset();
 
     res.status(200).json({
       status: 'success',

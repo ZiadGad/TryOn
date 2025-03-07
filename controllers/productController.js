@@ -1,46 +1,61 @@
-const multer = require('multer');
-
+const sharp = require('sharp');
 const Product = require('../models/productModel');
 const Review = require('../models/reviewsModel');
-const Variant = require('../models/variantModel');
 const factory = require('./handleFactory');
 const ApiFeatures = require('../utils/apiFeatures');
 const AppError = require('../utils/AppError');
 const catchAsync = require('../utils/catchAsync');
-
-const { uploadImageJob } = require('../queues/jobs/ImageJobs');
+const {
+  uploadMultipleImages,
+} = require('../middlewares/uploadImageMiddleware');
+const { s3Upload, s3Delete } = require('../utils/services/s3Service');
 
 exports.setCategoryId = (req, res, next) => {
   if (!req.body.category) req.body.category = req.params.categoryId;
   next();
 };
 
-const multerStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'public/img/products');
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname);
-  },
-});
-
-const multerFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image')) {
-    cb(null, true);
-  } else {
-    cb(new AppError('Not an image! please upload only images.', 400), false);
-  }
-};
-
-const upload = multer({
-  storage: multerStorage,
-  fileFilter: multerFilter,
-});
-
-exports.uploadProductImages = upload.fields([
+exports.uploadProductImages = uploadMultipleImages([
   { name: 'imgCover', maxCount: 1 },
   { name: 'images', maxCount: 3 },
 ]);
+
+exports.resizeProductImages = catchAsync(async (req, res, next) => {
+  if (req.files.imgCover) {
+    const buffer = await sharp(req.files.imgCover[0].buffer)
+      .resize(350, 350)
+      .toFormat('jpeg')
+      .jpeg({ quality: 80 })
+      .toBuffer();
+
+    const uploadResult = await s3Upload({
+      originalname: `cover`,
+      buffer,
+    });
+
+    req.body.imgCover = uploadResult.Location;
+  }
+
+  if (req.files.images) {
+    const imageUploadPromises = req.files.images.map(async (img, idx) => {
+      const imgBuffer = await sharp(img.buffer)
+        .resize(350, 350)
+        .toFormat('jpeg')
+        .jpeg({ quality: 70 })
+        .toBuffer();
+
+      const uploadResult = await s3Upload({
+        originalname: `${idx + 1}`,
+        buffer: imgBuffer,
+      });
+
+      return uploadResult.Location;
+    });
+
+    req.body.images = await Promise.all(imageUploadPromises);
+  }
+  next();
+});
 
 exports.getNewProducts = catchAsync(async (req, res, next) => {
   const filter = new Date();
@@ -87,16 +102,21 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
   const filter = factory.handleHiddenStatus(req);
 
   if (req.params.categoryId) filter.category = req.params.categoryId;
+  const documentCounts = await Product.countDocuments();
 
   const features = new ApiFeatures(Product.find(filter), req.query)
     .filter()
-    .sort({ createdAt: -1 })
+    .sort()
     .limitFields()
-    .paginate();
+    .search()
+    .paginate(documentCounts);
 
-  const products = await features.query;
+  const { query, metadata } = features;
+
+  const products = await query;
   return res.status(200).json({
     status: 'success',
+    metadata,
     results: products.length,
     data: {
       products,
@@ -157,30 +177,11 @@ exports.getProduct = catchAsync(async (req, res, next) => {
 });
 
 exports.createProduct = catchAsync(async (req, res, next) => {
-  let variants;
   const product = await Product.create(req.body);
-  if (req.files && (req.files.imgCover || req.files.images)) {
-    const imgCover = req.files.imgCover ? req.files.imgCover[0].path : null;
-    const images = req.files.images
-      ? req.files.images.map((file) => file.path)
-      : [];
-    uploadImageJob(product._id, imgCover, images);
-  }
-
-  if (req.body.variants) {
-    req.body.variants = JSON.parse(req.body.variants);
-    const handleVariants = req.body.variants.map((variant) => ({
-      // eslint-disable-next-line node/no-unsupported-features/es-syntax
-      ...variant,
-      product: req.product._id,
-    }));
-    variants = await Variant.insertMany(handleVariants);
-  }
   res.status(201).json({
     status: 'success',
     data: {
       product,
-      variants: variants || [],
     },
   });
 });
@@ -191,11 +192,17 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
     return next(new AppError('There is no product with this id', 404));
 
   if (req.files && (req.files.imgCover || req.files.images)) {
-    const imgCover = req.files.imgCover ? req.files.imgCover[0].path : null;
-    const images = req.files.images
-      ? req.files.images.map((file) => file.path)
+    const deleteCover = product.imgCover
+      ? [s3Delete(product.imgCover.split('/').slice(-1).toString())]
       : [];
-    uploadImageJob(product._id, imgCover, images);
+
+    const deleteImages = product.images
+      ? product.images.map((image) =>
+          s3Delete(image.split('/').slice(-1).toString()),
+        )
+      : [];
+
+    await Promise.all([...deleteCover, ...deleteImages]);
   }
 
   Object.keys(req.body).forEach((key) => {
@@ -211,4 +218,29 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.deleteProduct = factory.deleteOne(Product);
+exports.deleteProduct = catchAsync(async (req, res, next) => {
+  const product = await Product.findById(req.params.id);
+  if (!product) return next(new AppError('No product with this id', 404));
+
+  const deleteOperations = [];
+
+  if (product.imgCover) {
+    const coverKey = product.imgCover.split('/').slice(-1).toString();
+    deleteOperations.push(s3Delete(coverKey));
+  }
+
+  if (product.images) {
+    product.images.forEach((image) => {
+      const imageKey = image.split('/').slice(-1).toString();
+      deleteOperations.push(s3Delete(imageKey));
+    });
+  }
+
+  await Promise.all(deleteOperations);
+
+  await product.deleteOne();
+
+  res.status(204).json({
+    data: null,
+  });
+});

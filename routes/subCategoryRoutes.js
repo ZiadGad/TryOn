@@ -13,7 +13,9 @@ router
     authController.protect,
     authController.restrictTO('admin'),
     subCategoryController.setCategoryId,
+    subCategoryController.uploadSubCategoryImage,
     subCategoryValidators.createSubCategoryValidator,
+    subCategoryController.resizeSubCategoryImage,
     subCategoryController.createSubCategroy,
   );
 
@@ -27,7 +29,9 @@ router
   .patch(
     authController.protect,
     authController.restrictTO('admin'),
+    subCategoryController.uploadSubCategoryImage,
     subCategoryValidators.updateSubCategoryValidator,
+    subCategoryController.resizeSubCategoryImage,
     subCategoryController.updateSubCategory,
   )
   .delete(

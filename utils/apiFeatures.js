@@ -2,12 +2,11 @@ class ApiFeatures {
   constructor(query, queryString) {
     this.query = query;
     this.queryString = queryString;
-    this.limitValue = 100;
   }
 
   filter() {
     const queryObj = { ...this.queryString };
-    const excludedFields = ['page', 'limit', 'fields', 'sort'];
+    const excludedFields = ['page', 'limit', 'fields', 'sort', 'keyword'];
     excludedFields.forEach((el) => delete queryObj[el]);
 
     let queryStr = JSON.stringify(queryObj);
@@ -17,12 +16,12 @@ class ApiFeatures {
     return this;
   }
 
-  sort(field) {
+  sort() {
     if (this.queryString.sort) {
       const sortBy = this.queryString.sort.split(',').join(' ');
       this.query = this.query.sort(sortBy);
     } else {
-      this.query = this.query.sort(field);
+      this.query = this.query.sort('-createdAt');
     }
     return this;
   }
@@ -38,18 +37,43 @@ class ApiFeatures {
     return this;
   }
 
-  paginate() {
-    const page = this.queryString.page * 1 || 1;
-    const limit = this.queryString.limit * 1 || 30;
-    this.limitValue = limit;
-    const skip = (page - 1) * limit;
-    this.query = this.query.skip(skip).limit(limit);
+  search() {
+    if (this.queryString.keyword) {
+      const query = {};
+      query.$or = [
+        { name: { $regex: this.queryString.keyword, $options: 'i' } },
+        { summary: { $regex: this.queryString.keyword, $options: 'i' } },
+        // { description: { $regex: this.queryString.keyword, $options: 'i' } },
+      ];
 
+      this.query = this.query.find(query);
+    }
     return this;
   }
 
-  getLimit() {
-    return this.limitValue;
+  paginate(countDocuments) {
+    const page = this.queryString.page * 1 || 1;
+    const limit = this.queryString.limit * 1 || 40;
+    this.limitValue = limit;
+    const skip = (page - 1) * limit;
+    const endIndex = page * limit;
+
+    const pagination = {};
+    pagination.currentPage = page;
+    pagination.limit = limit;
+    pagination.totalPages = Math.ceil(countDocuments / limit);
+
+    if (endIndex < countDocuments) {
+      pagination.next = page + 1;
+    }
+
+    if (skip > 0) {
+      pagination.prev = page - 1;
+    }
+
+    this.metadata = pagination;
+    this.query = this.query.skip(skip).limit(limit);
+    return this;
   }
 }
 

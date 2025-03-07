@@ -19,8 +19,6 @@ const favoriteRouter = require('./routes/favoriteRoutes');
 
 const emailQueue = require('./queues/emailQueue');
 const emailProcessor = require('./queues/processors/emailProcessor');
-const imageQueue = require('./queues/imageQueue');
-const imageProcessor = require('./queues/processors/imageProcessor');
 
 const AppError = require('./utils/AppError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -61,8 +59,6 @@ if (process.env.NODE_ENV === 'development') {
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '20kb' }));
 app.use(cookieParser());
-emailQueue.process(emailProcessor);
-imageQueue.process(imageProcessor);
 
 app.use('/api/v1/categories', categoryRouter);
 app.use('/api/v1/subcategories', subCategoryRouter);

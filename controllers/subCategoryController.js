@@ -1,32 +1,61 @@
+const sharp = require('sharp');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
 const SubCategory = require('../models/subCategoryModel');
 const factory = require('./handleFactory');
+const ApiFeatures = require('../utils/apiFeatures');
+const { uploadSingleImage } = require('../middlewares/uploadImageMiddleware');
+const { s3Upload } = require('../utils/services/s3Service');
 
 exports.setCategoryId = (req, res, next) => {
   if (!req.body.category) req.body.category = req.params.categoryId;
   next();
 };
 
-exports.createSubCategroy = catchAsync(async (req, res, next) => {
-  const subCategory = await SubCategory.create(req.body);
+exports.uploadSubCategoryImage = uploadSingleImage('image');
 
-  res.status(201).json({
-    status: 'success',
-    data: {
-      subCategory,
-    },
-  });
+exports.resizeSubCategoryImage = catchAsync(async (req, res, next) => {
+  if (!req.file) return next();
+
+  try {
+    const buffer = await sharp(req.file.buffer)
+      .resize(400, 400)
+      .toFormat('jpeg')
+      .jpeg({ quality: 65 })
+      .toBuffer();
+
+    const uploadResult = await s3Upload({
+      originalname: `subcategory`,
+      buffer,
+    });
+
+    req.body.image = uploadResult.Location;
+    next();
+  } catch (err) {
+    return next(new AppError(`Error uploading image to S3`, 500));
+  }
 });
 
 exports.getAllSubCategories = catchAsync(async (req, res, next) => {
   const filter = factory.handleHiddenStatus(req);
   if (req.params.categoryId) filter.category = req.params.categoryId;
 
-  const subCategories = await SubCategory.find(filter);
+  const documentCounts = await SubCategory.countDocuments();
+
+  const features = new ApiFeatures(SubCategory.find(filter), req.query)
+    .filter()
+    .sort()
+    .limitFields()
+    .search()
+    .paginate(documentCounts);
+
+  const { query, metadata } = features;
+
+  const subCategories = await query;
 
   res.status(200).json({
     status: 'success',
+    metadata,
     results: subCategories.length,
     data: {
       subCategories,
@@ -34,49 +63,52 @@ exports.getAllSubCategories = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.getSubCategory = catchAsync(async (req, res, next) => {
-  const filter = factory.handleHiddenStatus(req);
-  const subCategory = await SubCategory.findOne({
-    _id: req.params.id,
-    ...filter,
-  }).populate({
-    path: 'category',
-    select: 'name -_id',
-  });
-  if (!subCategory)
-    return next(new AppError('No subCategory with this id', 404));
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      subCategory,
-    },
-  });
+exports.getSubCategory = factory.getOne(SubCategory, {
+  path: 'category',
+  select: 'name -_id',
 });
 
-exports.updateSubCategory = catchAsync(async (req, res, next) => {
-  const freshSubCategory = await SubCategory.findById(req.params.id);
-  if (!freshSubCategory)
-    return next(new AppError('No subCategory with this id', 404));
+exports.createSubCategroy = factory.createOne(SubCategory);
 
-  Object.keys(req.body).forEach((key) => {
-    freshSubCategory[key] = req.body[key];
-  });
+exports.updateSubCategory = factory.updateOne(SubCategory);
 
-  await freshSubCategory.save();
+exports.deleteSubCategory = factory.deleteOne(SubCategory);
 
-  res.status(200).json({
-    status: 'success',
-    data: {
-      category: freshSubCategory,
-    },
-  });
-});
+// exports.updateSubCategory = catchAsync(async (req, res, next) => {
+//   const freshSubCategory = await SubCategory.findById(req.params.id);
+//   if (!freshSubCategory)
+//     return next(new AppError('No subCategory with this id', 404));
 
-exports.deleteSubCategory = catchAsync(async (req, res, next) => {
-  await SubCategory.findByIdAndDelete(req.params.id);
+//   Object.keys(req.body).forEach((key) => {
+//     freshSubCategory[key] = req.body[key];
+//   });
 
-  res.status(204).json({
-    data: null,
-  });
-});
+//   await freshSubCategory.save();
+
+//   res.status(200).json({
+//     status: 'success',
+//     data: {
+//       category: freshSubCategory,
+//     },
+//   });
+// });
+
+// exports.getSubCategory = catchAsync(async (req, res, next) => {
+//   const filter = factory.handleHiddenStatus(req);
+//   const subCategory = await SubCategory.findOne({
+//     _id: req.params.id,
+//     ...filter,
+//   }).populate({
+//     path: 'category',
+//     select: 'name -_id',
+//   });
+//   if (!subCategory)
+//     return next(new AppError('No subCategory with this id', 404));
+
+//   res.status(200).json({
+//     status: 'success',
+//     data: {
+//       subCategory,
+//     },
+//   });
+// });

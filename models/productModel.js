@@ -52,6 +52,7 @@ const productSchema = new mongoose.Schema(
       },
     },
     colors: [String],
+    sizes: [String],
     imgCover: {
       type: String,
       required: [true, 'Product must have an image cover'],
@@ -94,6 +95,7 @@ const productSchema = new mongoose.Schema(
   },
 );
 productSchema.index({ category: 1, price: 1 });
+productSchema.index({ ratingsAverage: -1, price: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ productDiscount: -1, createdAt: -1 });
 productSchema.index({ createdAt: -1 });
@@ -114,14 +116,6 @@ productSchema.virtual('reviews', {
   foreignField: 'product',
   localField: '_id',
 });
-
-// Variations
-
-// productSchema.virtual('variations', {
-//   ref: 'Variation',
-//   foreignField: 'product',
-//   localField: '_id',
-// });
 
 productSchema.pre('save', function (next) {
   if (!this.slug) {

@@ -1,7 +1,7 @@
 const express = require('express');
 const productRouter = require('./productRoutes');
 const categoryController = require('../controllers/categoryController');
-const subCategoryRouter = require('../routes/subCategoryRoutes');
+const subCategoryRouter = require('./subCategoryRoutes');
 const authController = require('../controllers/authController');
 const categoryValidators = require('../utils/validators/categoryValidator');
 
@@ -16,7 +16,9 @@ router
   .post(
     authController.protect,
     authController.restrictTO('admin'),
+    // categoryController.uploadCategoryImage,
     categoryValidators.createCategoryValidator,
+    // categoryController.resizeCategoryImage,
     categoryController.createCategory,
   );
 
@@ -30,7 +32,9 @@ router
   .patch(
     authController.protect,
     authController.restrictTO('admin'),
+    // categoryController.uploadCategoryImage,
     categoryValidators.updateCategoryValidator,
+    // categoryController.resizeCategoryImage,
     categoryController.updateCategory,
   )
   .delete(
