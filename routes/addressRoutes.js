@@ -5,18 +5,16 @@ const authController = require('../controllers/authController');
 
 const router = express.Router();
 
+router.use(authController.protect);
+
 router
   .route('/')
-  .get(authController.isLoggedIn, addressController.getAddresses)
-  .post(
-    authController.protect,
-    authController.restrictTO('user'),
-    addressController.addToAddresses,
-  );
+  .get(addressController.getAddresses)
+  .post(authController.restrictTO('user'), addressController.addToAddresses);
 
 router.delete(
   '/:addressId',
-  authController.protect,
+
   authController.restrictTO('user'),
   addressController.removeAddress,
 );
