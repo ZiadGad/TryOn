@@ -1,36 +1,8 @@
-// const sharp = require('sharp');
-// const AppError = require('../utils/AppError');
 const Category = require('../models/categoryModel');
 const factory = require('./handleFactory');
-// const { uploadSingleImage } = require('../middlewares/uploadImageMiddleware');
-// const { s3Upload } = require('../utils/services/s3Service');
 
 const catchAsync = require('../utils/catchAsync');
 const ApiFeatures = require('../utils/apiFeatures');
-
-// exports.uploadCategoryImage = uploadSingleImage('image');
-
-// exports.resizeCategoryImage = catchAsync(async (req, res, next) => {
-//   if (!req.file) return next();
-
-//   try {
-//     const buffer = await sharp(req.file.buffer)
-//       .resize(400, 400)
-//       .toFormat('jpeg')
-//       .jpeg({ quality: 65 })
-//       .toBuffer();
-
-//     const uploadResult = await s3Upload({
-//       originalname: `category`,
-//       buffer,
-//     });
-
-//     req.body.image = uploadResult.Location;
-//     next();
-//   } catch (err) {
-//     return next(new AppError(`Error uploading image to S3`, 500));
-//   }
-// });
 
 exports.getAllCategories = catchAsync(async (req, res, next) => {
   const filter = factory.handleHiddenStatus(req);

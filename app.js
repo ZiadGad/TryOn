@@ -15,10 +15,8 @@ const categoryRouter = require('./routes/categoryRoutes');
 const subCategoryRouter = require('./routes/subCategoryRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
-const favoriteRouter = require('./routes/favoriteRoutes');
-
-const emailQueue = require('./queues/emailQueue');
-const emailProcessor = require('./queues/processors/emailProcessor');
+const wishlistRouter = require('./routes/wishlistRoutes');
+const addressRouter = require('./routes/addressRoutes');
 
 const AppError = require('./utils/AppError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -65,7 +63,8 @@ app.use('/api/v1/subcategories', subCategoryRouter);
 app.use('/api/v1/products', productRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
-app.use('/api/v1/favorites', favoriteRouter);
+app.use('/api/v1/wishlist', wishlistRouter);
+app.use('/api/v1/addresses', addressRouter);
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Cant find ${req.originalUrl} in this server`, 404));

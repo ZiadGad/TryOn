@@ -1,7 +1,34 @@
+const sharp = require('sharp');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
 const factory = require('./handleFactory');
+const { uploadSingleImage } = require('../middlewares/uploadImageMiddleware');
+const { s3Upload } = require('../utils/services/s3Service');
+
+exports.uploadUserImage = uploadSingleImage('photo');
+
+exports.resizeUserImage = catchAsync(async (req, res, next) => {
+  if (!req.file) return next();
+
+  try {
+    const buffer = await sharp(req.file.buffer)
+      .resize(400, 400)
+      .toFormat('jpeg')
+      .jpeg({ quality: 70 })
+      .toBuffer();
+
+    const uploadResult = await s3Upload({
+      originalname: `user`,
+      buffer,
+    });
+
+    req.body.photo = uploadResult.Location;
+    next();
+  } catch (err) {
+    return next(new AppError(`Error uploading image to S3`, 500));
+  }
+});
 
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
@@ -27,6 +54,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     );
 
   const filterBody = filterObj(req.body, 'name', 'email');
+  if (req.file) filterBody.photo = req.body.photo;
 
   const updatedUser = await User.findByIdAndUpdate(req.user.id, filterBody, {
     new: true,

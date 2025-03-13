@@ -100,6 +100,12 @@ productSchema.index({ price: 1 });
 productSchema.index({ productDiscount: -1, createdAt: -1 });
 productSchema.index({ createdAt: -1 });
 
+productSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'product',
+  localField: '_id',
+});
+
 productSchema.pre('save', function (next) {
   if (this.isNew || this.isModified('name')) {
     if (!this.slug) {
@@ -109,12 +115,6 @@ productSchema.pre('save', function (next) {
     }
   }
   next();
-});
-
-productSchema.virtual('reviews', {
-  ref: 'Review',
-  foreignField: 'product',
-  localField: '_id',
 });
 
 productSchema.pre('save', function (next) {

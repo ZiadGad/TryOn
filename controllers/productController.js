@@ -132,7 +132,6 @@ exports.getProduct = catchAsync(async (req, res, next) => {
     .populate({
       path: 'reviews',
     })
-
     .populate({
       path: 'category',
       select: 'name -_id',

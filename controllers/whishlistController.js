@@ -3,50 +3,50 @@ const catchAsync = require('../utils/catchAsync');
 
 exports.getFavorites = catchAsync(async (req, res, next) => {
   if (!req.user)
-    return res.status(200).json({ status: 'success', data: { favorites: [] } });
+    return res.status(200).json({ status: 'success', data: { wishlist: [] } });
 
   const user = await User.findById(req.user._id).populate({
-    path: 'favorites',
+    path: 'wishlist',
     select:
       'name color size ratingsAverage ratingsQuantity price productDiscount imgCover',
   });
 
   res.status(200).json({
     status: 'success',
+    results: user.wishlist.length,
     data: {
-      favorites: user.favorites,
+      wishlist: user.wishlist,
     },
   });
 });
 
-exports.createFavorite = catchAsync(async (req, res, next) => {
-  const { productId } = req.body;
+exports.addToWishlist = catchAsync(async (req, res, next) => {
   const user = await User.findByIdAndUpdate(
     req.user._id,
     {
-      $addToSet: { favorites: productId },
+      $addToSet: { wishlist: req.body.productId },
     },
     { new: true, runValidators: true },
   );
   res.status(200).json({
     status: 'success',
-    data: {
-      user,
-    },
+    message: 'Product added succefully to your wishlist',
+    data: user.wishlist,
   });
 });
 
-exports.deleteFavorite = catchAsync(async (req, res, next) => {
-  await User.findByIdAndUpdate(
+exports.removeProductFromWishlist = catchAsync(async (req, res, next) => {
+  const user = await User.findByIdAndUpdate(
     req.user._id,
     {
-      $pull: { favorites: req.params.id },
+      $pull: { wishlist: req.params.id },
     },
-    { new: true, runValidators: true },
+    { new: true },
   );
 
-  res.status(204).json({
+  res.status(200).json({
     status: 'success',
-    data: null,
+    message: 'Product removed succefully from your wishlist',
+    data: user.wishlist,
   });
 });

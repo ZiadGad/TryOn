@@ -5,17 +5,12 @@ const reviewSchema = new mongoose.Schema(
   {
     review: {
       type: String,
-      required: [true, 'Review can not be empty'],
     },
     rating: {
       type: Number,
       required: [true, 'Rating can not be empty'],
       min: 1,
       max: 5,
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
     },
     product: {
       type: mongoose.Schema.ObjectId,
@@ -31,6 +26,7 @@ const reviewSchema = new mongoose.Schema(
   {
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
+    timestamps: true,
   },
 );
 
@@ -83,6 +79,13 @@ reviewSchema.pre(/^find/, function (next) {
 reviewSchema.post(/^findOneAnd/, async (docs) => {
   if (docs) await docs.constructor.calcAverageRatings(docs.product);
 });
+reviewSchema.post(
+  'deleteOne',
+  { document: true, query: false },
+  async (docs) => {
+    if (docs) await docs.constructor.calcAverageRatings(docs.product);
+  },
+);
 
 const Review = mongoose.model('Review', reviewSchema);
 

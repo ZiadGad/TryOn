@@ -1,24 +1,24 @@
 const express = require('express');
 
-const favoriteController = require('../controllers/favoriteController');
+const addressController = require('../controllers/addressController');
 const authController = require('../controllers/authController');
 
 const router = express.Router();
 
 router
   .route('/')
-  .get(authController.isLoggedIn, favoriteController.getFavorites)
+  .get(authController.isLoggedIn, addressController.getAddresses)
   .post(
     authController.protect,
     authController.restrictTO('user'),
-    favoriteController.createFavorite,
+    addressController.addToAddresses,
   );
 
 router.delete(
-  '/:id',
+  '/:addressId',
   authController.protect,
   authController.restrictTO('user'),
-  favoriteController.deleteFavorite,
+  addressController.removeAddress,
 );
 
 module.exports = router;

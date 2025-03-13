@@ -8,21 +8,28 @@ exports.handleHiddenStatus = (req) =>
 
 exports.getAll = (model) =>
   catchAsync(async (req, res, next) => {
-    let filter = {};
-    if (req.params.productId) filter = { product: req.params.productId };
+    const filter = this.handleHiddenStatus(req);
+    if (req.params.categoryId) filter.category = req.params.categoryId;
+
+    const documentCounts = await model.countDocuments();
+
     const features = new ApiFeatures(model.find(filter), req.query)
       .filter()
       .sort()
       .limitFields()
-      .paginate();
+      .search()
+      .paginate(documentCounts);
 
-    const docs = await features.query;
+    const { query, metadata } = features;
+
+    const docs = await query;
 
     res.status(200).json({
       status: 'success',
+      metadata,
       results: docs.length,
       data: {
-        docs,
+        data: docs,
       },
     });
   });
