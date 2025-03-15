@@ -58,21 +58,31 @@ exports.resizeProductImages = catchAsync(async (req, res, next) => {
 });
 
 exports.getNewProducts = catchAsync(async (req, res, next) => {
-  const filter = new Date();
-  filter.setDate(filter.getDate() - 7);
+  const date = new Date();
+  date.setDate(date.getDate() - 20);
 
-  const newProducts = await Product.find({
-    status: { $ne: 'hide' },
-    createdAt: { $gte: filter },
-  })
-    .sort({ createdAt: -1 })
-    .populate({
-      path: 'reviews',
-    });
+  const filter = factory.handleHiddenStatus(req);
+  filter.createdAt = { $gte: date };
+
+  const documentCounts = await Product.countDocuments();
+
+  const features = new ApiFeatures(Product.find(filter), req.query)
+    .filter()
+    .sort()
+    .limitFields()
+    .search()
+    .paginate(documentCounts);
+
+  const { query, metadata } = features;
+
+  const newProducts = await query.populate({
+    path: 'reviews',
+  });
 
   res.status(200).json({
     status: 'success',
     results: newProducts.length,
+    metadata,
     data: {
       products: newProducts,
     },
@@ -80,17 +90,30 @@ exports.getNewProducts = catchAsync(async (req, res, next) => {
 });
 
 exports.getOnSaleProducts = catchAsync(async (req, res, next) => {
-  const saleProducts = await Product.aggregate([
-    {
-      $match: { status: { $ne: 'hide' }, productDiscount: { $gt: 0 } },
-    },
-    {
-      $sort: { productDiscount: -1, createdAt: -1 },
-    },
-  ]);
+  const documentCounts = await Product.countDocuments();
+
+  const features = new ApiFeatures(
+    Product.aggregate([
+      {
+        $match: { status: { $ne: 'hide' }, productDiscount: { $gt: 0 } },
+      },
+      {
+        $sort: { productDiscount: -1, createdAt: -1 },
+      },
+    ]),
+    req.query,
+  )
+    .sort()
+    .search()
+    .paginate(documentCounts);
+
+  const { query, metadata } = features;
+
+  const saleProducts = await query;
 
   res.status(200).json({
     status: 'success',
+    metadata,
     results: saleProducts.length,
     data: {
       products: saleProducts,
