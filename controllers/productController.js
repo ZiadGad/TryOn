@@ -90,19 +90,12 @@ exports.getNewProducts = catchAsync(async (req, res, next) => {
 });
 
 exports.getOnSaleProducts = catchAsync(async (req, res, next) => {
+  const filter = factory.handleHiddenStatus(req);
+  filter.priceDiscount = { $gt: 0 };
   const documentCounts = await Product.countDocuments();
+  req.query.sort = '-productDiscount,-createdAt';
 
-  const features = new ApiFeatures(
-    Product.aggregate([
-      {
-        $match: { status: { $ne: 'hide' }, productDiscount: { $gt: 0 } },
-      },
-      {
-        $sort: { productDiscount: -1, createdAt: -1 },
-      },
-    ]),
-    req.query,
-  )
+  const features = new ApiFeatures(Product.find(filter), req.query)
     .sort()
     .search()
     .paginate(documentCounts);
