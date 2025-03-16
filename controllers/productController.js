@@ -91,7 +91,7 @@ exports.getNewProducts = catchAsync(async (req, res, next) => {
 
 exports.getOnSaleProducts = catchAsync(async (req, res, next) => {
   const filter = factory.handleHiddenStatus(req);
-  filter.priceDiscount = { $gt: 0 };
+  filter.productDiscount = { $gt: 0 };
   const documentCounts = await Product.countDocuments();
   req.query.sort = '-productDiscount,-createdAt';
 
