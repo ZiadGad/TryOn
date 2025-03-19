@@ -20,8 +20,10 @@ const app = express();
 // app.use(cors());
 app.use(
   cors({
-    origin: '*',
+    origin: 'http://localhost:5174',
     credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   }),
 );
 app.options('*', cors());

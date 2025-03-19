@@ -46,6 +46,7 @@ exports.createCashOrder = catchAsync(async (req, res, next) => {
 exports.filterOrderForLoggedUser = catchAsync(async (req, res, next) => {
   if (req.user && req.user.role === 'user')
     req.orderFilter = { user: req.user._id };
+  next();
 });
 
 exports.findAllOrders = factory.getAll(Order);
