@@ -18,7 +18,13 @@ const globalErrorHandler = require('./controllers/errorController');
 const app = express();
 
 const corsOptions = {
-  origin: 'http://localhost:5174', // Replace with your client URL
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    // Allow any origin
+    callback(null, true);
+  },
   credentials: true, // Allow credentials (cookies) to be sent
 };
 
