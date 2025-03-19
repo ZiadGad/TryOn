@@ -10,6 +10,7 @@ exports.getAll = (model) =>
   catchAsync(async (req, res, next) => {
     const filter = this.handleHiddenStatus(req);
     if (req.params.categoryId) filter.category = req.params.categoryId;
+    if (req.orderFilter) Object.assign(filter, req.orderFilter);
 
     const documentCounts = await model.countDocuments();
 
@@ -28,9 +29,7 @@ exports.getAll = (model) =>
       status: 'success',
       metadata,
       results: docs.length,
-      data: {
-        data: docs,
-      },
+      data: docs,
     });
   });
 

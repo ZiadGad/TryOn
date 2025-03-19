@@ -1,4 +1,5 @@
 const Cart = require('../models/cartModel');
+const Coupon = require('../models/couponModel');
 const Product = require('../models/productModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
@@ -100,4 +101,56 @@ exports.clearCart = catchAsync(async (req, res, next) => {
   await Cart.findOneAndDelete({ user: req.user._id });
 
   res.status(204).send();
+});
+
+exports.updateCart = catchAsync(async (req, res, next) => {
+  const { quantity } = req.body;
+  const cart = await Cart.findOne({ user: req.user._id });
+
+  if (!cart) return next(new AppError('No cart for this user', 404));
+
+  const itemIndex = cart.cartItems.findIndex(
+    (item) => item._id.toString() === req.params.itemId,
+  );
+
+  if (itemIndex > -1) {
+    const cartItem = cart.cartItems[itemIndex];
+    cartItem.quantity = quantity;
+    cart.cartItems[itemIndex] = cartItem;
+  } else {
+    return next(new AppError('There is no item with this ID'));
+  }
+
+  calcTotalCartPrice(cart);
+  await cart.save();
+
+  res.status(200).json({
+    status: 'success',
+    numOfCartItems: cart.cartItems.length,
+    data: cart,
+  });
+});
+
+exports.applyCoupon = catchAsync(async (req, res, next) => {
+  const coupon = await Coupon.findOne({
+    code: req.body.code,
+    expire: { $gt: Date.now() },
+  });
+  if (!coupon) return next(new AppError('Coupon is Invalid or not found', 400));
+
+  const cart = await Cart.findOne({ user: req.user._id });
+
+  const totalPrice = cart.totalCartPrice;
+  const totalPriceAfterDiscount = (
+    totalPrice -
+    (totalPrice * coupon.discount) / 100
+  ).toFixed(2);
+
+  cart.totalPriceAfterDiscount = totalPriceAfterDiscount;
+  await cart.save();
+  res.status(200).json({
+    status: 'success',
+    numOfCartItems: cart.cartItems.length,
+    data: cart,
+  });
 });
