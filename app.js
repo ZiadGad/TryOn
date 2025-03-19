@@ -26,10 +26,15 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization'],
   }),
 );
-app.options('*', cors());
+app.options('http://localhost:5174', cors());
 app.enable('trust proxy');
 app.use(compression());
-
+app.use((req, res, next) => {
+  console.log('middleware');
+  res.header('Access-Control-Allow-Origin', 'http://localhost:5174');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  next();
+});
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
