@@ -17,13 +17,8 @@ const globalErrorHandler = require('./controllers/errorController');
 
 const app = express();
 
-const corsOptions = {
-  origin: 'http://localhost:5174', // Replace with your client URL
-  credentials: true, // Allow credentials (cookies) to be sent
-};
-
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+app.use(cors());
+app.options('*', cors());
 app.enable('trust proxy');
 app.use(compression());
 
