@@ -62,7 +62,8 @@ exports.login = catchAsync(async (req, res, next) => {
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
-  console.log(`from logedIn ${req.cookies.jwt}`);
+  console.log(`from Protect in headers ${req.header.cookie}`);
+  console.log(`from Protect ${req.cookies.jwt}`);
   let token;
   if (
     req.headers.authorization &&
@@ -94,6 +95,7 @@ exports.protect = catchAsync(async (req, res, next) => {
 });
 
 exports.isLoggedIn = async (req, res, next) => {
+  console.log(`from logedIn in headers ${req.header.cookie}`);
   console.log(`from logedIn ${req.cookies.jwt}`);
   let token;
   try {

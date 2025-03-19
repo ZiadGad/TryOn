@@ -16,17 +16,16 @@ const AppError = require('./utils/AppError');
 const globalErrorHandler = require('./controllers/errorController');
 
 const app = express();
+const coresOptions = {
+  origin: 'http://localhost:5174',
+  credentials: true,
+  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
 
 // app.use(cors());
-app.use(
-  cors({
-    origin: 'http://localhost:5174',
-    credentials: true,
-    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  }),
-);
-// app.options('http://localhost:5174', cors());
+app.use(cors(coresOptions));
+app.options('http://localhost:5174', cors(coresOptions));
 app.enable('trust proxy');
 app.use(compression());
 app.use((req, res, next) => {
