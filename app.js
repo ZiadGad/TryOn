@@ -26,7 +26,7 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization'],
   }),
 );
-app.options('http://localhost:5174', cors());
+// app.options('http://localhost:5174', cors());
 app.enable('trust proxy');
 app.use(compression());
 app.use((req, res, next) => {
