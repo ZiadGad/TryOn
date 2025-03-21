@@ -9,6 +9,14 @@ class ApiFeatures {
     const excludedFields = ['page', 'limit', 'fields', 'sort', 'keyword'];
     excludedFields.forEach((el) => delete queryObj[el]);
 
+    if (queryObj.colors) {
+      queryObj.colors = { in: queryObj.colors.split(',') };
+    }
+
+    if (queryObj.sizes) {
+      queryObj.sizes = { in: queryObj.sizes.split(',') };
+    }
+
     let queryStr = JSON.stringify(queryObj);
     queryStr = queryStr.replace(
       /\b(gte|gt|lte|lt|in)\b/g,

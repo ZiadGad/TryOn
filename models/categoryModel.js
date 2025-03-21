@@ -19,30 +19,24 @@ const categorySchema = new mongoose.Schema(
       minlength: 10,
       maxlength: 100,
     },
-    // image: {
-    //   type: String,
-    //   default: '/default-category.png',
-    // },
     status: {
       type: String,
       enum: ['show', 'hide'],
       default: 'show',
     },
   },
-  { timestamps: true },
   {
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
+    timestamps: true,
   },
 );
 categorySchema.index({ createdAt: -1 });
 categorySchema.index({ name: 1 });
 
-// FIXME: Change ref to subcategory
-
-categorySchema.virtual('children', {
-  ref: 'Category',
-  foreignField: 'parent',
+categorySchema.virtual('subCategories', {
+  ref: 'SubCategory',
+  foreignField: 'category',
   localField: '_id',
 });
 
@@ -52,9 +46,11 @@ categorySchema.virtual('products', {
   localField: '_id',
 });
 
-// Query middleware
+categorySchema.pre(/^find/, function (next) {
+  this.populate({ path: 'subCategories', select: 'name' });
+  next();
+});
 
-// Document middleware
 categorySchema.pre('save', function (next) {
   if (!this.slug) {
     this.slug = slugify(this.name, { lower: true });

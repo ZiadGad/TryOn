@@ -20,4 +20,15 @@ router.post(
 );
 
 router.get('/:id', orderController.findSpecificOrder);
+
+router.patch(
+  '/:id/pay',
+  authController.restrictTO('admin'),
+  orderController.updateOrderToPaid,
+);
+router.patch(
+  '/:id/deliver',
+  authController.restrictTO('admin'),
+  orderController.updateOrderToDelivered,
+);
 module.exports = router;

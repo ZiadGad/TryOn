@@ -50,10 +50,21 @@ const orderSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    deleveredAt: Date,
+    deliveredAt: Date,
   },
   { timestamps: true },
 );
+
+orderSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'user',
+    select: 'name email',
+  }).populate({
+    path: 'cartItems.product',
+    select: 'name',
+  });
+  next();
+});
 
 const Order = mongoose.model('Order', orderSchema);
 

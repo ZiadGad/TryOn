@@ -69,7 +69,7 @@ exports.deleteReviewValidator = [
     .isMongoId()
     .withMessage('Invalid Review Id Format')
     .custom((val, { req }) => {
-      // Check review ownership before update
+      // Check review ownership before delete
       if (req.user.role === 'user') {
         return Review.findById(val).then((review) => {
           if (!review) {

@@ -60,13 +60,9 @@ reviewSchema.statics.calcAverageRatings = async function (productId) {
   }
 };
 
-// Document Middlewares
-
 reviewSchema.post('save', function () {
   this.constructor.calcAverageRatings(this.product);
 });
-
-// Query Middlewares
 
 reviewSchema.pre(/^find/, function (next) {
   this.populate({

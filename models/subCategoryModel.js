@@ -19,12 +19,15 @@ const subCategorySchema = new mongoose.Schema(
     },
     image: String,
   },
-  { timestamps: true },
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+    timestamps: true,
+  },
 );
 
 subCategorySchema.index({ createdAt: -1 });
 
-// Document middleware
 subCategorySchema.pre('save', function (next) {
   if (!this.slug) {
     this.slug = slugify(this.name, { lower: true });

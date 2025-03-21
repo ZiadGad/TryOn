@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
 const User = require('../models/userModel');
-// const { addEmailJob } = require('../queues/jobs/emailJobs');
 const Email = require('../utils/email');
 
 const signToken = (id) =>
@@ -18,7 +17,7 @@ const createSentToken = (user, statusCode, req, res) => {
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
     ),
-    httpOnly: true, // means cookie can't be manipulated on browser or deleted
+    httpOnly: true,
     secure: false,
     sameSite: 'Lax',
     // secure: req.secure || req.headers['x-forwarded-proto'] === 'https',
@@ -43,7 +42,6 @@ exports.signup = catchAsync(async (req, res, next) => {
     passwordConfirm: req.body.passwordConfirm,
   });
   // const url = `${req.protocol}://${req.get('host')}/me`; // {{Frontend}}
-  // addEmailJob(newUser, url, 'welcome');
 
   createSentToken(newUser, 201, req, res);
 });
@@ -62,8 +60,6 @@ exports.login = catchAsync(async (req, res, next) => {
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
-  console.log(`from Protect in headers ${req.header.cookie}`);
-  console.log(`from Protect ${req.cookies.jwt}`);
   let token;
   if (
     req.headers.authorization &&
@@ -95,8 +91,6 @@ exports.protect = catchAsync(async (req, res, next) => {
 });
 
 exports.isLoggedIn = async (req, res, next) => {
-  console.log(`from logedIn in headers ${req.header.cookie}`);
-  console.log(`from logedIn ${req.cookies.jwt}`);
   let token;
   try {
     if (
@@ -141,7 +135,6 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
 
   try {
-    // addEmailJob(user, resetURL, 'passwordReset');
     await new Email(user, resetURL).sendPasswordReset();
 
     res.status(200).json({
