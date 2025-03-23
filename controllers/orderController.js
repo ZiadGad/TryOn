@@ -1,3 +1,4 @@
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const factory = require('./handleFactory');
 const Order = require('../models/orderModel');
 const Cart = require('../models/cartModel');
@@ -84,5 +85,43 @@ exports.updateOrderToDelivered = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: updatedOrder,
+  });
+});
+
+exports.checkoutSession = catchAsync(async (req, res, next) => {
+  const taxPrice = 0;
+  const shippingPrice = 0;
+  const cart = await Cart.findById(req.params.cartId);
+  if (!cart) return next(new AppError('No cart with this id', 404));
+
+  const cartPrice = cart.totalPriceAfterDiscount
+    ? cart.totalPriceAfterDiscount
+    : cart.totalCartPrice;
+
+  const totalOrderPrice = cartPrice + taxPrice + shippingPrice;
+
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ['card'],
+    line_items: [
+      {
+        quantity: 1,
+        price_data: {
+          product_data: { name: req.user.name },
+          currency: 'egp',
+          unit_amount: totalOrderPrice * 100,
+        },
+      },
+    ],
+    mode: 'payment',
+    success_url: `${req.protocol}://${req.get('host')}/orders`,
+    cancel_url: `${req.protocol}://${req.get('host')}/cart`,
+    customer_email: req.user.email,
+    client_reference_id: req.params.cartId,
+    metadata: req.body.shippingAddress,
+  });
+
+  res.status(200).json({
+    status: 'success',
+    session,
   });
 });

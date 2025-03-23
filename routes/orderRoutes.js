@@ -6,6 +6,12 @@ const authController = require('../controllers/authController');
 const router = express.Router();
 
 router.use(authController.protect);
+
+router.get(
+  '/checkout-session/:cartId',
+  authController.restrictTO('user'),
+  orderController.checkoutSession,
+);
 router.get(
   '/',
   authController.restrictTO('admin', 'user'),
