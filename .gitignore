@@ -143,3 +143,5 @@ dist
 # images
 public/
 queues/
+
+mongo-init.js

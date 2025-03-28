@@ -3,3 +3,5 @@ Dockerfile
 vercel.json
 /dev-data
 .vscode
+config.env
+docker-compose*

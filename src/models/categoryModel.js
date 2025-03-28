@@ -32,7 +32,6 @@ const categorySchema = new mongoose.Schema(
   },
 );
 categorySchema.index({ createdAt: -1 });
-categorySchema.index({ name: 1 });
 
 categorySchema.virtual('subCategories', {
   ref: 'SubCategory',

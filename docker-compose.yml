@@ -1,0 +1,24 @@
+version: "3"
+services:
+  tryon-app:
+    container_name: tryon-container
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./config.env
+    depends_on:
+      - mongo
+  mongo:
+    image: mongo
+    restart: always
+    volumes:
+      - mongo-db:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/*.js
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: 161123
+      MONGO_INITDB_DATABASE: tryon
+
+volumes:
+  mongo-db:
+  
