@@ -2,6 +2,7 @@ version: "3"
 services:
   tryon-app:
     container_name: tryon-container
+    image: ziadgad/tryon-docker
     ports:
       - "3000:3000"
     env_file:

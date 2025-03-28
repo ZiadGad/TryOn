@@ -6,6 +6,8 @@ services:
       # args:
       #   - NODE_ENV=production
       target: production
+    ports:
+      - 3000:3000
     environment:
       - NODE_ENV=production
     command: npm run start:prod
