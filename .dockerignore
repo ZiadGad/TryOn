@@ -1,0 +1,5 @@
+/node_modules
+Dockerfile
+vercel.json
+/dev-data
+.vscode
