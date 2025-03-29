@@ -20,6 +20,21 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: 161123
       MONGO_INITDB_DATABASE: tryon
 
+  caddy:
+    image: caddy:latest
+    container_name: caddy-container
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./conf/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - tryon-app
+      
 volumes:
   mongo-db:
+  caddy_data:
+  caddy_config:
   
