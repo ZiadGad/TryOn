@@ -1,3 +1,3 @@
-tryon-store.xyz, www.tryon-store.xyz {
+tryon-store.xyz, www.tryon-store.xyz, api.tryon-store.xyz {
     reverse_proxy tryon-container:3000
 }
