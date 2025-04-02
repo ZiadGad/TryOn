@@ -20,6 +20,9 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: 161123
       MONGO_INITDB_DATABASE: tryon
 
+  redis:
+    image: redis
+
   caddy:
     image: caddy:latest
     container_name: caddy-container

@@ -2,6 +2,7 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
 const ApiFeatures = require('../utils/apiFeatures');
 const { s3Delete } = require('../utils/services/s3Service');
+const redisClient = require('../config/redis');
 
 exports.handleHiddenStatus = (req) =>
   !req.user || req.user.role !== 'admin' ? { status: { $ne: 'hide' } } : {};
@@ -52,10 +53,10 @@ exports.getOne = (model, popOptions) =>
     });
   });
 
-exports.createOne = (model) =>
+exports.createOne = (model, cashKey) =>
   catchAsync(async (req, res, next) => {
     const doc = await model.create(req.body);
-
+    if (cashKey) await redisClient.del(cashKey);
     res.status(201).json({
       status: 'success',
       data: {

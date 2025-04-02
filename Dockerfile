@@ -1,4 +1,4 @@
-FROM node:20 as development
+FROM node:20 AS development
 WORKDIR /app
 COPY package.json .
 # ARG NODE_ENV
@@ -11,7 +11,7 @@ COPY . .
 EXPOSE 3000
 CMD ["npm", "start"]
 
-FROM node:20 as production
+FROM node:20 AS production
 WORKDIR /app
 COPY package.json .
 RUN npm install --omit=dev;
