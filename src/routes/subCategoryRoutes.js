@@ -1,44 +1,54 @@
 const express = require('express');
 const productRouter = require('./productRoutes');
-const subCategoryController = require('../controllers/subCategoryController');
 const authController = require('../controllers/authController');
-const subCategoryValidators = require('../utils/validators/subCategoryValidator');
+const {
+  createSubCategoryValidator,
+  getSubCategoryValidator,
+  deleteSubCategoryValidator,
+  updateSubCategoryValidator,
+} = require('../utils/validators/subCategoryValidator');
+const {
+  getAllSubCategories,
+  setCategoryId,
+  uploadSubCategoryImage,
+  resizeSubCategoryImage,
+  createSubCategroy,
+  getSubCategory,
+  deleteSubCategory,
+  updateSubCategory,
+} = require('../controllers/subCategoryController');
 
 const router = express.Router({ mergeParams: true });
+router.use('/:subCategoryId/products', productRouter);
+
+router.get('/', authController.isLoggedIn, getAllSubCategories);
+router.get(
+  '/:id',
+  authController.isLoggedIn,
+  getSubCategoryValidator,
+  getSubCategory,
+);
+
+router.use(authController.protect, authController.restrictTO('admin'));
 
 router
   .route('/')
-  .get(authController.isLoggedIn, subCategoryController.getAllSubCategories)
   .post(
-    authController.protect,
-    authController.restrictTO('admin'),
-    subCategoryController.setCategoryId,
-    subCategoryController.uploadSubCategoryImage,
-    subCategoryValidators.createSubCategoryValidator,
-    subCategoryController.resizeSubCategoryImage,
-    subCategoryController.createSubCategroy,
+    setCategoryId,
+    uploadSubCategoryImage,
+    createSubCategoryValidator,
+    resizeSubCategoryImage,
+    createSubCategroy,
   );
 
 router
   .route('/:id')
-  .get(
-    authController.isLoggedIn,
-    subCategoryValidators.getSubCategoryValidator,
-    subCategoryController.getSubCategory,
-  )
   .patch(
-    authController.protect,
-    authController.restrictTO('admin'),
-    subCategoryController.uploadSubCategoryImage,
-    subCategoryValidators.updateSubCategoryValidator,
-    subCategoryController.resizeSubCategoryImage,
-    subCategoryController.updateSubCategory,
+    uploadSubCategoryImage,
+    updateSubCategoryValidator,
+    resizeSubCategoryImage,
+    updateSubCategory,
   )
-  .delete(
-    authController.protect,
-    authController.restrictTO('admin'),
-    subCategoryValidators.deleteSubCategoryValidator,
-    subCategoryController.deleteSubCategory,
-  );
+  .delete(deleteSubCategoryValidator, deleteSubCategory);
 
 module.exports = router;

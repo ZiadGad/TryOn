@@ -48,7 +48,6 @@ exports.updateReviewValidator = [
     .isMongoId()
     .withMessage('Invalid Review Id Format')
     .custom((val, { req }) =>
-      // Check review ownership before update
       Review.findById(val).then((review) => {
         if (!review) {
           return Promise.reject(new Error(`There is no review with id ${val}`));
@@ -69,7 +68,6 @@ exports.deleteReviewValidator = [
     .isMongoId()
     .withMessage('Invalid Review Id Format')
     .custom((val, { req }) => {
-      // Check review ownership before delete
       if (req.user.role === 'user') {
         return Review.findById(val).then((review) => {
           if (!review) {

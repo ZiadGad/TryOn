@@ -3,7 +3,6 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
 const SubCategory = require('../models/subCategoryModel');
 const factory = require('./handleFactory');
-const ApiFeatures = require('../utils/apiFeatures');
 const { uploadSingleImage } = require('../middlewares/uploadImageMiddleware');
 const { s3Upload } = require('../utils/services/s3Service');
 
@@ -36,40 +35,11 @@ exports.resizeSubCategoryImage = catchAsync(async (req, res, next) => {
   }
 });
 
-exports.getAllSubCategories = catchAsync(async (req, res, next) => {
-  const filter = factory.handleHiddenStatus(req);
-  if (req.params.categoryId) filter.category = req.params.categoryId;
-
-  const documentCounts = await SubCategory.countDocuments();
-
-  const features = new ApiFeatures(SubCategory.find(filter), req.query)
-    .filter()
-    .sort()
-    .limitFields()
-    .search()
-    .paginate(documentCounts);
-
-  const { query, metadata } = features;
-
-  const subCategories = await query;
-
-  res.status(200).json({
-    status: 'success',
-    metadata,
-    results: subCategories.length,
-    data: {
-      subCategories,
-    },
-  });
-});
-
+exports.getAllSubCategories = factory.getAll(SubCategory);
 exports.getSubCategory = factory.getOne(SubCategory, {
   path: 'category',
   select: 'name -_id',
 });
-
 exports.createSubCategroy = factory.createOne(SubCategory);
-
 exports.updateSubCategory = factory.updateOne(SubCategory);
-
 exports.deleteSubCategory = factory.deleteOne(SubCategory);

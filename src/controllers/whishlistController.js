@@ -3,7 +3,6 @@ const catchAsync = require('../utils/catchAsync');
 const redisClient = require('../config/redis');
 
 exports.getFavorites = catchAsync(async (req, res, next) => {
-  const cachedKey = `wishlist:${req.user._id}`;
   if (!req.user)
     return res.status(200).json({
       status: 'success',
@@ -11,10 +10,12 @@ exports.getFavorites = catchAsync(async (req, res, next) => {
       data: { wishlist: [] },
     });
 
+  const cachedKey = `wishlist:${req.user._id}`;
   const cachedData = await redisClient.get(cachedKey);
   if (cachedData) {
     return res.status(200).json({
       status: 'success',
+      cached: true,
       results: JSON.parse(cachedData).length,
       data: {
         categories: JSON.parse(cachedData),

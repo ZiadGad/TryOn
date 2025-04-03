@@ -1,6 +1,7 @@
 version: "3"
 services:
   tryon-app:
+    restart: always
     container_name: tryon-container
     image: ziadgad/tryon-docker
     ports:

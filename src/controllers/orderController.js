@@ -2,6 +2,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const factory = require('./handleFactory');
 const Order = require('../models/orderModel');
 const Cart = require('../models/cartModel');
+const User = require('../models/userModel');
 const Product = require('../models/productModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
@@ -106,7 +107,10 @@ exports.checkoutSession = catchAsync(async (req, res, next) => {
       {
         quantity: 1,
         price_data: {
-          product_data: { name: req.user.name },
+          product_data: {
+            name: `${req.user.name} Order`,
+            images: [`https://i.imgur.com/dikFPgG.png`],
+          },
           currency: 'egp',
           unit_amount: totalOrderPrice * 100,
         },
@@ -124,4 +128,65 @@ exports.checkoutSession = catchAsync(async (req, res, next) => {
     status: 'success',
     session,
   });
+});
+
+const createCardOrder = async (session) => {
+  const cartId = session.client_reference_id;
+  const shippingAddress = session.metadata;
+  const orderPrice = session.amount_total / 100;
+
+  const cart = await Cart.findById(cartId);
+  const user = await User.findOne({ email: session.customer_email });
+
+  const order = await Order.create({
+    user,
+    cartItems: cart.cartItems,
+    shippingAddress,
+    totalOrderPrice: orderPrice,
+    isPaid: true,
+    paidAt: Date.now(),
+    paymentMethodType: 'card',
+  });
+
+  if (order) {
+    const bulkOption = cart.cartItems.map((item) => ({
+      updateOne: {
+        filter: { _id: item.product },
+        update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
+      },
+    }));
+
+    await Product.bulkWrite(bulkOption, {});
+
+    await Cart.findByIdAndDelete(cartId);
+  }
+};
+
+exports.webhookCheckout = catchAsync(async (req, res, next) => {
+  const endpointSecret = process.env.STRIPE_WEBHOOK_ENDPOINT_SECRET;
+
+  let event;
+  if (endpointSecret) {
+    const signature = req.headers['stripe-signature'];
+
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        signature,
+        endpointSecret,
+      );
+    } catch (err) {
+      console.log(`⚠️  Webhook signature verification failed.`, err.message);
+      return res.sendStatus(400);
+    }
+  }
+
+  // eslint-disable-next-line default-case
+  switch (event.type) {
+    case 'checkout.session.completed':
+      createCardOrder(event.data.object);
+      break;
+  }
+
+  res.status(200).json({ recieved: true });
 });

@@ -1,43 +1,40 @@
 const express = require('express');
 const productRouter = require('./productRoutes');
-const categoryController = require('../controllers/categoryController');
 const subCategoryRouter = require('./subCategoryRoutes');
 const authController = require('../controllers/authController');
-const categoryValidators = require('../utils/validators/categoryValidator');
+const {
+  createCategoryValidator,
+  getCategoryValidator,
+  updateCategoryValidator,
+  deleteCategoryValidator,
+} = require('../utils/validators/categoryValidator');
+const {
+  getAllCategories,
+  createCategory,
+  getCategory,
+  deleteCategory,
+  updateCategory,
+} = require('../controllers/categoryController');
 
 const router = express.Router();
 
 router.use('/:categoryId/products', productRouter);
 router.use('/:categoryId/subcategories', subCategoryRouter);
 
-router
-  .route('/')
-  .get(authController.isLoggedIn, categoryController.getAllCategories)
-  .post(
-    authController.protect,
-    authController.restrictTO('admin'),
-    categoryValidators.createCategoryValidator,
-    categoryController.createCategory,
-  );
+router.get('/', authController.isLoggedIn, getAllCategories);
+router.get(
+  '/:id',
+  authController.isLoggedIn,
+  getCategoryValidator,
+  getCategory,
+);
 
+router.use(authController.protect, authController.restrictTO('admin'));
+
+router.route('/').post(createCategoryValidator, createCategory);
 router
   .route('/:id')
-  .get(
-    authController.isLoggedIn,
-    categoryValidators.getCategoryValidator,
-    categoryController.getCategory,
-  )
-  .patch(
-    authController.protect,
-    authController.restrictTO('admin'),
-    categoryValidators.updateCategoryValidator,
-    categoryController.updateCategory,
-  )
-  .delete(
-    authController.protect,
-    authController.restrictTO('admin'),
-    categoryValidators.deleteCategoryValidator,
-    categoryController.deleteCategory,
-  );
+  .patch(updateCategoryValidator, updateCategory)
+  .delete(deleteCategoryValidator, deleteCategory);
 
 module.exports = router;

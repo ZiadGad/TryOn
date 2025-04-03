@@ -1,40 +1,26 @@
 const express = require('express');
-const cartController = require('../controllers/cartController');
 const authController = require('../controllers/authController');
+const {
+  applyCoupon,
+  getLoggedUserCart,
+  addToCart,
+  clearCart,
+  updateCart,
+  removeSpecificCartItem,
+} = require('../controllers/cartController');
+const { addToCartValidator } = require('../utils/validators/cartValidator');
 
 const router = express.Router();
-router.patch(
-  '/applyCoupon',
-  authController.protect,
-  authController.restrictTO('user'),
-  cartController.applyCoupon,
-);
+router.use(authController.protect, authController.restrictTO('user'));
+
+router.patch('/applyCoupon', applyCoupon);
 
 router
   .route('/')
-  .get(authController.protect, cartController.getLoggedUserCart)
-  .post(
-    authController.protect,
-    authController.restrictTO('user'),
-    cartController.addToCart,
-  )
-  .delete(
-    authController.protect,
-    authController.restrictTO('user'),
-    cartController.clearCart,
-  );
+  .get(getLoggedUserCart)
+  .post(addToCartValidator, addToCart)
+  .delete(clearCart);
 
-router
-  .route('/:itemId')
-  .patch(
-    authController.protect,
-    authController.restrictTO('user'),
-    cartController.updateCart,
-  )
-  .delete(
-    authController.protect,
-    authController.restrictTO('user'),
-    cartController.removeSpecificCartItem,
-  );
+router.route('/:itemId').patch(updateCart).delete(removeSpecificCartItem);
 
 module.exports = router;

@@ -11,6 +11,9 @@ exports.getAll = (model) =>
   catchAsync(async (req, res, next) => {
     const filter = this.handleHiddenStatus(req);
     if (req.params.categoryId) filter.category = req.params.categoryId;
+    if (req.params.subCategoryId)
+      filter.subcategories = { $in: [req.params.subCategoryId] };
+
     if (req.orderFilter) Object.assign(filter, req.orderFilter);
 
     const documentCounts = await model.countDocuments();

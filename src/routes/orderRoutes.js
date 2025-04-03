@@ -1,7 +1,15 @@
 const express = require('express');
-
-const orderController = require('../controllers/orderController');
 const authController = require('../controllers/authController');
+
+const {
+  checkoutSession,
+  filterOrderForLoggedUser,
+  findAllOrders,
+  updateOrderToDelivered,
+  updateOrderToPaid,
+  findSpecificOrder,
+  createCashOrder,
+} = require('../controllers/orderController');
 
 const router = express.Router();
 
@@ -10,31 +18,23 @@ router.use(authController.protect);
 router.get(
   '/checkout-session/:cartId',
   authController.restrictTO('user'),
-  orderController.checkoutSession,
+  checkoutSession,
 );
 router.get(
   '/',
   authController.restrictTO('admin', 'user'),
-  orderController.filterOrderForLoggedUser,
-  orderController.findAllOrders,
+  filterOrderForLoggedUser,
+  findAllOrders,
 );
 
-router.post(
-  '/:cartId',
-  authController.restrictTO('user'),
-  orderController.createCashOrder,
-);
+router.post('/:cartId', authController.restrictTO('user'), createCashOrder);
 
-router.get('/:id', orderController.findSpecificOrder);
+router.get('/:id', findSpecificOrder);
 
-router.patch(
-  '/:id/pay',
-  authController.restrictTO('admin'),
-  orderController.updateOrderToPaid,
-);
+router.patch('/:id/pay', authController.restrictTO('admin'), updateOrderToPaid);
 router.patch(
   '/:id/deliver',
   authController.restrictTO('admin'),
-  orderController.updateOrderToDelivered,
+  updateOrderToDelivered,
 );
 module.exports = router;

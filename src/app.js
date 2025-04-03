@@ -12,21 +12,24 @@ const compression = require('compression');
 
 const mountRoutes = require('./routes');
 
+const { webhookCheckout } = require('./controllers/orderController');
+
 const AppError = require('./utils/AppError');
 const globalErrorHandler = require('./controllers/errorController');
 
 const app = express();
-const coresOptions = {
-  origin: 'http://localhost:5174',
-  credentials: true,
-  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-};
 
 app.use(cors());
 app.options('*', cors());
 app.enable('trust proxy');
 app.use(compression());
+
+// Checkout-webhook
+app.post(
+  '/webhook-checkout',
+  express.raw({ type: 'application/json' }),
+  webhookCheckout,
+);
 
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));

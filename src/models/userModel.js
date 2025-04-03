@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Please provide a password'],
       minlength: 8,
-      // select: false,
+      select: false,
     },
     passwordConfirm: {
       type: String,
@@ -57,6 +57,7 @@ const userSchema = new mongoose.Schema(
     active: {
       type: Boolean,
       default: true,
+      select: false,
     },
     passwordChangedAt: Date,
     passwordResetToken: String,

@@ -17,8 +17,6 @@ const calcTotalCartPrice = (cart) => {
 exports.getLoggedUserCart = catchAsync(async (req, res, next) => {
   const cart = await Cart.findOne({ user: req.user._id });
 
-  console.log(cart);
-
   res.status(200).json({
     status: 'success',
     numOfCartItems: cart ? cart.cartItems.length : 0,

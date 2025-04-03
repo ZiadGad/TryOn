@@ -58,31 +58,23 @@ exports.resizeProductImages = catchAsync(async (req, res, next) => {
 });
 
 exports.getNewProducts = catchAsync(async (req, res, next) => {
-  const date = new Date();
-  date.setDate(date.getDate() - 20);
-
   const filter = factory.handleHiddenStatus(req);
-  filter.createdAt = { $gte: date };
 
-  const documentCounts = await Product.countDocuments();
-
-  const features = new ApiFeatures(Product.find(filter), req.query)
+  const features = new ApiFeatures(
+    Product.find(filter).sort('-createdAt').limit(40),
+    req.query,
+  )
     .filter()
-    .sort()
     .limitFields()
-    .search()
-    .paginate(documentCounts);
+    .search();
 
-  const { query, metadata } = features;
+  const { query } = features;
 
-  const newProducts = await query.populate({
-    path: 'reviews',
-  });
+  const newProducts = await query;
 
   res.status(200).json({
     status: 'success',
     results: newProducts.length,
-    metadata,
     data: {
       products: newProducts,
     },
@@ -114,31 +106,8 @@ exports.getOnSaleProducts = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.getAllProducts = catchAsync(async (req, res, next) => {
-  const filter = factory.handleHiddenStatus(req);
-
-  if (req.params.categoryId) filter.category = req.params.categoryId;
-  const documentCounts = await Product.countDocuments();
-
-  const features = new ApiFeatures(Product.find(filter), req.query)
-    .filter()
-    .sort()
-    .limitFields()
-    .search()
-    .paginate(documentCounts);
-
-  const { query, metadata } = features;
-
-  const products = await query;
-  return res.status(200).json({
-    status: 'success',
-    metadata,
-    results: products.length,
-    data: {
-      products,
-    },
-  });
-});
+exports.getAllProducts = factory.getAll(Product);
+exports.createProduct = factory.createOne(Product);
 
 exports.getProduct = catchAsync(async (req, res, next) => {
   const filter = factory.handleHiddenStatus(req);
@@ -184,16 +153,6 @@ exports.getProduct = catchAsync(async (req, res, next) => {
   product.ratingsBreakdown = ratingsBreakdown;
 
   res.status(200).json({
-    status: 'success',
-    data: {
-      product,
-    },
-  });
-});
-
-exports.createProduct = catchAsync(async (req, res, next) => {
-  const product = await Product.create(req.body);
-  res.status(201).json({
     status: 'success',
     data: {
       product,

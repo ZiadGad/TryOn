@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-// ? process.env.DATABASE.replace('<PASSWORD>', process.env.DB_PASSWORD)
 
 const DB =
   process.env.NODE_ENV === 'production'

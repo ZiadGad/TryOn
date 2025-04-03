@@ -1,47 +1,54 @@
 const express = require('express');
-const productController = require('../controllers/productController');
 const authController = require('../controllers/authController');
 const reviewRouter = require('./reviewRoutes');
-const productValidator = require('../utils/validators/productValidator');
+const {
+  deleteProductValidator,
+  updateProductValidator,
+  getProductValidator,
+  createProductValidator,
+} = require('../utils/validators/productValidator');
+const {
+  deleteProduct,
+  updateProduct,
+  getProduct,
+  getOnSaleProducts,
+  getNewProducts,
+  getAllProducts,
+  setCategoryId,
+  uploadProductImages,
+  resizeProductImages,
+  createProduct,
+} = require('../controllers/productController');
 
 const router = express.Router({ mergeParams: true });
 router.use('/:productId/reviews', reviewRouter);
 
-router.get('/onSaleProducts', productController.getOnSaleProducts);
-router.get('/newProducts', productController.getNewProducts);
+router.get('/onSaleProducts', getOnSaleProducts);
+router.get('/newProducts', getNewProducts);
+
+router.get('/', authController.isLoggedIn, getAllProducts);
+router.get('/:id', authController.isLoggedIn, getProductValidator, getProduct);
+
+router.use(authController.protect, authController.restrictTO('admin'));
 
 router
   .route('/')
-  .get(authController.isLoggedIn, productController.getAllProducts)
   .post(
-    authController.protect,
-    authController.restrictTO('admin'),
-    productController.setCategoryId,
-    productController.uploadProductImages,
-    productValidator.createProductValidator,
-    productController.resizeProductImages,
-    productController.createProduct,
+    setCategoryId,
+    uploadProductImages,
+    createProductValidator,
+    resizeProductImages,
+    createProduct,
   );
+
 router
   .route('/:id')
-  .get(
-    authController.isLoggedIn,
-    productValidator.getProductValidator,
-    productController.getProduct,
-  )
   .patch(
-    authController.protect,
-    authController.restrictTO('admin'),
-    productValidator.updateProductValidator,
-    productController.uploadProductImages,
-    productController.resizeProductImages,
-    productController.updateProduct,
+    updateProductValidator,
+    uploadProductImages,
+    resizeProductImages,
+    updateProduct,
   )
-  .delete(
-    authController.protect,
-    authController.restrictTO('admin'),
-    productValidator.deleteProductValidator,
-    productController.deleteProduct,
-  );
+  .delete(deleteProductValidator, deleteProduct);
 
 module.exports = router;
