@@ -53,7 +53,10 @@ const userSchema = new mongoose.Schema(
       enum: ['user', 'admin'],
       default: 'user',
     },
-    photo: String,
+    photo: {
+      type: String,
+      default: 'https://api.tryon-store.xyz/img/users/default.jpg',
+    },
     active: {
       type: Boolean,
       default: true,

@@ -26,7 +26,7 @@ exports.getFavorites = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.user._id).populate({
     path: 'wishlist',
     select:
-      'name color size ratingsAverage ratingsQuantity price productDiscount imgCover',
+      'name color size ratingsAverage ratingsQuantity price productDiscount imgCover summary',
   });
 
   await redisClient.set(cachedKey, JSON.stringify(user.wishlist));

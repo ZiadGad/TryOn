@@ -8,7 +8,7 @@ exports.getUserValidator = [
 ];
 
 exports.createUserValidator = [
-  check('name').notEmpty().withMessage('SubCategory must have a name'),
+  check('name').notEmpty().withMessage('User must have a name'),
   check('email')
     .notEmpty()
     .withMessage('Email required')
@@ -43,7 +43,7 @@ exports.createUserValidator = [
 ];
 
 exports.updateUserValidator = [
-  check('id').isMongoId().withMessage('Invalid SubCategory Id Format'),
+  check('id').isMongoId().withMessage('Invalid User Id Format'),
   validatorMiddleware,
 ];
 
@@ -64,6 +64,24 @@ exports.changePasswordValidator = [
 ];
 
 exports.deleteUserValidator = [
-  check('id').isMongoId().withMessage('Invalid SubCategory Id Format'),
+  check('id').isMongoId().withMessage('Invalid User Id Format'),
+  validatorMiddleware,
+];
+
+exports.deleteLoggedUserValidator = [
+  check('id')
+    .notEmpty()
+    .withMessage('Provide user ID')
+    .isMongoId()
+    .withMessage('Invalid MongoId')
+    .custom((userId) =>
+      User.findById(userId).then((user) => {
+        console.log(user.role);
+        console.log(user);
+        if (user.role === 'admin') {
+          return Promise.reject(new Error('Admin Can not delete himself'));
+        }
+      }),
+    ),
   validatorMiddleware,
 ];

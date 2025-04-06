@@ -68,8 +68,7 @@ exports.createProductValidator = [
     .withMessage('images should be an array of strings'),
 
   check('category')
-    .notEmpty()
-    .withMessage('Product must belong to Category')
+    .optional()
     .isMongoId()
     .withMessage('Invalid Category Id')
     .custom((categoryId) =>
@@ -82,8 +81,7 @@ exports.createProductValidator = [
     ),
 
   check('subcategories')
-    .notEmpty()
-    .withMessage('Product must belong to subcategory')
+    .optional()
     .isMongoId()
     .withMessage('Invalid subcategory Id')
     .custom((subcategoriesId) =>

@@ -17,7 +17,8 @@ const {
 
 const router = express.Router({ mergeParams: true });
 
-router.get('/', getAllReviews);
+// FIXME: Fix Get all reviews route
+router.get('/', setProductUserIds, getAllReviews);
 router.get('/:id', getReviewValidator, getReview);
 
 router.use(authController.protect);

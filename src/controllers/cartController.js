@@ -103,7 +103,7 @@ exports.clearCart = catchAsync(async (req, res, next) => {
 
 exports.updateCart = catchAsync(async (req, res, next) => {
   const { quantity } = req.body;
-  const cart = await Cart.findOne({ user: req.user._id });
+  const cart = await Cart.findOne({ usdescriptioner: req.user._id });
 
   if (!cart) return next(new AppError('No cart for this user', 404));
 
@@ -134,7 +134,7 @@ exports.applyCoupon = catchAsync(async (req, res, next) => {
     code: req.body.code,
     expire: { $gt: Date.now() },
   });
-  if (!coupon) return next(new AppError('Coupon is Invalid or not found', 400));
+  if (!coupon) return next(new AppError('Coupon is Invalid or Expired', 400));
 
   const cart = await Cart.findOne({ user: req.user._id });
 

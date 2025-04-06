@@ -23,8 +23,8 @@ const {
 const router = express.Router({ mergeParams: true });
 router.use('/:productId/reviews', reviewRouter);
 
-router.get('/onSaleProducts', getOnSaleProducts);
-router.get('/newProducts', getNewProducts);
+router.get('/onSaleProducts', authController.isLoggedIn, getOnSaleProducts);
+router.get('/newProducts', authController.isLoggedIn, getNewProducts);
 
 router.get('/', authController.isLoggedIn, getAllProducts);
 router.get('/:id', authController.isLoggedIn, getProductValidator, getProduct);

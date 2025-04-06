@@ -6,6 +6,7 @@ const {
   createUserValidator,
   updateUserValidator,
   deleteUserValidator,
+  deleteLoggedUserValidator,
 } = require('../utils/validators/userValidator');
 const {
   getMe,
@@ -36,7 +37,7 @@ router.patch(
   authController.updatePassword,
 );
 router.route('/updateMe').patch(uploadUserImage, resizeUserImage, updateMe);
-router.route('/deleteMe').delete(deleteMe);
+router.route('/deleteMe').delete(getMe, deleteLoggedUserValidator, deleteMe);
 
 router.use(authController.restrictTO('admin'));
 

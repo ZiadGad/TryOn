@@ -7,7 +7,7 @@ exports.addAddressValidator = [
     .withMessage('Address must have an alias')
     .isLength({ min: 3 })
     .withMessage('Alias can not be less then 3 characters')
-    .isLength({ max: 10 })
+    .isLength({ max: 20 })
     .withMessage('Alias can not be more than 10 caracters'),
   body('phone')
     .notEmpty()
