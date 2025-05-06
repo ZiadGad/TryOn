@@ -8,11 +8,13 @@ const addressRouter = require('./addressRoutes');
 const couponRouter = require('./couponRoutes');
 const cartRouter = require('./cartRoutes');
 const orderRouter = require('./orderRoutes');
+const analyticsRouter = require('./analyticsRoutes');
 
 const mountRoutes = (app) => {
   app.get('/', (req, res) => {
     res.json({ message: 'Welcome to TryOn API' });
   });
+  app.use('/api/v1/analyticsRouter', analyticsRouter);
   app.use('/api/v1/categories', categoryRouter);
   app.use('/api/v1/subcategories', subCategoryRouter);
   app.use('/api/v1/products', productRouter);

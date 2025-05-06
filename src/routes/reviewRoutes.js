@@ -13,12 +13,14 @@ const {
   deleteReview,
   getReview,
   getAllReviews,
+  getRatingsBreakdown,
 } = require('../controllers/reviewController');
 
 const router = express.Router({ mergeParams: true });
 
 // FIXME: Fix Get all reviews route
-router.get('/', setProductUserIds, getAllReviews);
+router.get('/', getAllReviews);
+router.get('/ratingsBreakdown/:productId', getRatingsBreakdown);
 router.get('/:id', getReviewValidator, getReview);
 
 router.use(authController.protect);

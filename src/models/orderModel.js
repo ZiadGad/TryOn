@@ -61,7 +61,7 @@ orderSchema.pre(/^find/, function (next) {
     select: 'name email',
   }).populate({
     path: 'cartItems.product',
-    select: 'name',
+    select: 'name imgCover',
   });
   next();
 });

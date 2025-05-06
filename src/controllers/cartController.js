@@ -15,7 +15,10 @@ const calcTotalCartPrice = (cart) => {
 };
 
 exports.getLoggedUserCart = catchAsync(async (req, res, next) => {
-  const cart = await Cart.findOne({ user: req.user._id });
+  const cart = await Cart.findOne({ user: req.user._id }).populate({
+    path: 'cartItems.product',
+    select: 'imgCover name',
+  });
 
   res.status(200).json({
     status: 'success',
@@ -84,7 +87,10 @@ exports.removeSpecificCartItem = catchAsync(async (req, res, next) => {
       $pull: { cartItems: { _id: req.params.itemId } },
     },
     { new: true },
-  );
+  ).populate({
+    path: 'cartItems.product',
+    select: 'imgCover name',
+  });
   calcTotalCartPrice(cart);
 
   await cart.save();
@@ -103,7 +109,10 @@ exports.clearCart = catchAsync(async (req, res, next) => {
 
 exports.updateCart = catchAsync(async (req, res, next) => {
   const { quantity } = req.body;
-  const cart = await Cart.findOne({ usdescriptioner: req.user._id });
+  const cart = await Cart.findOne({ user: req.user._id }).populate({
+    path: 'cartItems.product',
+    select: 'imgCover name',
+  });
 
   if (!cart) return next(new AppError('No cart for this user', 404));
 

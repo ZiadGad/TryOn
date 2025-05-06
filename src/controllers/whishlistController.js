@@ -6,7 +6,7 @@ exports.getFavorites = catchAsync(async (req, res, next) => {
   if (!req.user)
     return res.status(200).json({
       status: 'success',
-      message: 'No user Empty Whishlist',
+      message: 'No Logged user. Empty Whishlist',
       data: { wishlist: [] },
     });
 
@@ -29,7 +29,7 @@ exports.getFavorites = catchAsync(async (req, res, next) => {
       'name color size ratingsAverage ratingsQuantity price productDiscount imgCover summary',
   });
 
-  await redisClient.set(cachedKey, JSON.stringify(user.wishlist));
+  await redisClient.setEx(cachedKey, 3600, JSON.stringify(user.wishlist));
 
   res.status(200).json({
     status: 'success',

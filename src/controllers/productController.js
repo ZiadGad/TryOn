@@ -23,9 +23,9 @@ exports.uploadProductImages = uploadMultipleImages([
 exports.resizeProductImages = catchAsync(async (req, res, next) => {
   if (req.files.imgCover) {
     const buffer = await sharp(req.files.imgCover[0].buffer)
-      .resize(350, 350)
+      .resize(407, 611)
       .toFormat('jpeg')
-      .jpeg({ quality: 80 })
+      .jpeg({ quality: 97 })
       .toBuffer();
 
     const uploadResult = await s3Upload({
@@ -39,9 +39,9 @@ exports.resizeProductImages = catchAsync(async (req, res, next) => {
   if (req.files.images) {
     const imageUploadPromises = req.files.images.map(async (img, idx) => {
       const imgBuffer = await sharp(img.buffer)
-        .resize(350, 350)
+        .resize(407, 611)
         .toFormat('jpeg')
-        .jpeg({ quality: 70 })
+        .jpeg({ quality: 90 })
         .toBuffer();
 
       const uploadResult = await s3Upload({
@@ -110,20 +110,24 @@ exports.getAllProducts = factory.getAll(Product);
 exports.createProduct = factory.createOne(Product);
 
 exports.getProduct = catchAsync(async (req, res, next) => {
+  let wishlist = [];
+  if (req.user) {
+    wishlist = req.user.wishlist;
+  }
   const filter = factory.handleHiddenStatus(req);
   filter._id = req.params.id;
 
   const product = await Product.findOne(filter)
     .populate({
-      path: 'reviews',
-    })
-    .populate({
       path: 'category',
-      select: 'name -_id',
+      select: 'name',
     })
     .populate({
       path: 'subcategories',
-      select: 'name -_id',
+      select: 'name',
+    })
+    .populate({
+      path: 'reviews',
     });
 
   if (!product) {
@@ -150,12 +154,12 @@ exports.getProduct = catchAsync(async (req, res, next) => {
     count: stat.count,
   }));
 
-  product.ratingsBreakdown = ratingsBreakdown;
-
   res.status(200).json({
     status: 'success',
     data: {
       product,
+      ratingsBreakdown,
+      wishlist,
     },
   });
 });

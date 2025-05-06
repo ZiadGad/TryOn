@@ -9,7 +9,7 @@ const productSchema = new mongoose.Schema(
       required: [true, 'Product must have a name'],
       trim: true,
       minlength: [5, 'A product must have more or equal than 5 characters'],
-      maxlength: [40, 'A product must have less or equal than 40 characters'],
+      maxlength: [70, 'A product must have less or equal than 40 characters'],
     },
     slug: {
       type: String,
@@ -20,7 +20,7 @@ const productSchema = new mongoose.Schema(
       trim: true,
       required: [true, 'A product must have a summary'],
       minlength: 10,
-      maxlength: 200,
+      maxlength: 500,
     },
     description: {
       type: String,

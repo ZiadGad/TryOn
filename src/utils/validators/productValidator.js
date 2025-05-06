@@ -14,7 +14,7 @@ exports.createProductValidator = [
     .withMessage('Product must have a name')
     .isLength({ min: 5 })
     .withMessage('Too short Product name')
-    .isLength({ max: 40 })
+    .isLength({ max: 70 })
     .withMessage('Too long Product name'),
 
   check('summary')
@@ -22,7 +22,7 @@ exports.createProductValidator = [
     .withMessage('Product must have a summary')
     .isLength({ min: 10 })
     .withMessage('Summary can not be less than 10 characters')
-    .isLength({ max: 200 })
+    .isLength({ max: 500 })
     .withMessage('Summary can not be more than 200 characters'),
 
   check('description')

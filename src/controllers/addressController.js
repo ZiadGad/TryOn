@@ -16,7 +16,7 @@ exports.getAddresses = catchAsync(async (req, res, next) => {
 
   const user = await User.findById(req.user._id);
 
-  await redisClient.set(cachedKey, JSON.stringify(user.addresses));
+  await redisClient.setEx(cachedKey, 3600, JSON.stringify(user.addresses));
 
   res.status(200).json({
     status: 'success',

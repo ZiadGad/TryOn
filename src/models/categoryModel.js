@@ -45,10 +45,10 @@ categorySchema.virtual('products', {
   localField: '_id',
 });
 
-categorySchema.pre(/^find/, function (next) {
-  this.populate({ path: 'subCategories', select: 'name' });
-  next();
-});
+// categorySchema.pre(/^find/, function (next) {
+//   this.populate({ path: 'subCategories', select: 'name' });
+//   next();
+// });
 
 categorySchema.pre('save', function (next) {
   if (!this.slug) {

@@ -18,7 +18,7 @@ exports.resizeSubCategoryImage = catchAsync(async (req, res, next) => {
 
   try {
     const buffer = await sharp(req.file.buffer)
-      .resize(400, 400)
+      .resize(407, 611)
       .toFormat('jpeg')
       .jpeg({ quality: 65 })
       .toBuffer();

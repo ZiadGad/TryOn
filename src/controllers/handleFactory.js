@@ -10,6 +10,7 @@ exports.handleHiddenStatus = (req) =>
 exports.getAll = (model) =>
   catchAsync(async (req, res, next) => {
     const filter = this.handleHiddenStatus(req);
+    if (req.params.productId) filter.product = req.params.productId;
     if (req.params.categoryId) filter.category = req.params.categoryId;
     if (req.params.subCategoryId)
       filter.subcategories = { $in: [req.params.subCategoryId] };
@@ -58,6 +59,7 @@ exports.getOne = (model, popOptions) =>
 
 exports.createOne = (model, cashKey) =>
   catchAsync(async (req, res, next) => {
+    if (req.params.categoryId) req.body.category = req.params.categoryId;
     const doc = await model.create(req.body);
     if (cashKey) await redisClient.del(cashKey);
     res.status(201).json({
@@ -75,6 +77,7 @@ exports.updateOne = (model) =>
     if (!doc) return next(new AppError('No document found with that ID', 404));
 
     if (req.file && doc.image) {
+      console.log(doc.image.split('/').slice(-1).toString());
       await s3Delete(doc.image.split('/').slice(-1).toString());
     }
 

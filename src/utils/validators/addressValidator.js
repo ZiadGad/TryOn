@@ -26,7 +26,7 @@ exports.addAddressValidator = [
 ];
 
 exports.deleteAddressValidator = [
-  check('id')
+  check('addressId')
     .notEmpty()
     .withMessage('Enter address Id')
     .isMongoId()

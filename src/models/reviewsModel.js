@@ -5,6 +5,7 @@ const reviewSchema = new mongoose.Schema(
   {
     review: {
       type: String,
+      trim: true,
     },
     rating: {
       type: Number,
@@ -59,11 +60,6 @@ reviewSchema.statics.calcAverageRatings = async function (productId) {
     });
   }
 };
-
-reviewSchema.post('save', function () {
-  this.constructor.calcAverageRatings(this.product);
-});
-
 reviewSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'user',
@@ -72,6 +68,9 @@ reviewSchema.pre(/^find/, function (next) {
   next();
 });
 
+reviewSchema.post('save', function () {
+  this.constructor.calcAverageRatings(this.product);
+});
 reviewSchema.post(/^findOneAnd/, async (docs) => {
   if (docs) await docs.constructor.calcAverageRatings(docs.product);
 });
