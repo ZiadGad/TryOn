@@ -21,40 +21,47 @@ exports.uploadProductImages = uploadMultipleImages([
 ]);
 
 exports.resizeProductImages = catchAsync(async (req, res, next) => {
-  if (req.files.imgCover) {
-    const buffer = await sharp(req.files.imgCover[0].buffer)
-      .resize(407, 611)
-      .toFormat('jpeg')
-      .jpeg({ quality: 97 })
-      .toBuffer();
-
-    const uploadResult = await s3Upload({
-      originalname: `cover`,
-      buffer,
-    });
-
-    req.body.imgCover = uploadResult.Location;
-  }
-
-  if (req.files.images) {
-    const imageUploadPromises = req.files.images.map(async (img, idx) => {
-      const imgBuffer = await sharp(img.buffer)
+  if (!req.files.imgCover || (!req.files.imgCover && !req.files.images))
+    return next();
+  try {
+    if (req.files.imgCover) {
+      const buffer = await sharp(req.files.imgCover[0].buffer)
         .resize(407, 611)
         .toFormat('jpeg')
-        .jpeg({ quality: 90 })
+        .jpeg({ quality: 97 })
         .toBuffer();
 
       const uploadResult = await s3Upload({
-        originalname: `${idx + 1}`,
-        buffer: imgBuffer,
+        originalname: `cover`,
+        buffer,
       });
 
-      return uploadResult.Location;
-    });
+      req.body.imgCover = uploadResult.Location;
+    }
 
-    req.body.images = await Promise.all(imageUploadPromises);
+    if (req.files.images) {
+      const imageUploadPromises = req.files.images.map(async (img, idx) => {
+        const imgBuffer = await sharp(img.buffer)
+          .resize(407, 611)
+          .toFormat('jpeg')
+          .jpeg({ quality: 90 })
+          .toBuffer();
+
+        const uploadResult = await s3Upload({
+          originalname: `${idx + 1}`,
+          buffer: imgBuffer,
+        });
+
+        return uploadResult.Location;
+      });
+
+      req.body.images = await Promise.all(imageUploadPromises);
+    }
+    next();
+  } catch (err) {
+    console.log(`(S3) Error In Uploading Images: ${err}`);
+    return next(new AppError(`Error uploading image to S3`, 500));
   }
-  next();
 });
 
 exports.getNewProducts = catchAsync(async (req, res, next) => {
